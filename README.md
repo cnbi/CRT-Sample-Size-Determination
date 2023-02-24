@@ -1,4 +1,4 @@
-# [PROJECT NAME]
+# [Power analysis in cluster randomised trials]
 
 ## Project organization
 - PG = project-generated
@@ -8,27 +8,23 @@
 .
 ├── .gitignore
 ├── CITATION.md
-├── LICENSE.md
+├── LICENSE
 ├── README.md
-├── requirements.txt
-├── bin                <- Compiled and external code, ignored by git (PG)
-│   └── external       <- Any external source code, ignored by git (RO)
-├── config             <- Configuration files (HW)
 ├── data               <- All project data, ignored by git
 │   ├── processed      <- The final, canonical data sets for modeling. (PG)
 │   ├── raw            <- The original, immutable data dump. (RO)
 │   └── temp           <- Intermediate data that has been transformed. (PG)
 ├── docs               <- Documentation notebook for users (HW)
 │   ├── manuscript     <- Manuscript source, e.g., LaTeX, Markdown, etc. (HW)
-│   └── reports        <- Other project reports and notebooks (e.g. Jupyter, .Rmd) (HW)
+│   └── reports        <- Other project reports and notebooks (e.g. .Rmd) (HW)
 ├── results
 │   ├── figures        <- Figures for the manuscript or reports (PG)
 │   └── output         <- Other output for the manuscript or reports (PG)
-└── src                <- Source code for this project (HW)
+└── scripts               <- Scripts with code for this project (HW)
 
 ```
 
 
 ## License
 
-This project is licensed under the terms of the [MIT License](/LICENSE.md)
+This project is licensed under the terms of the [GNU GPLv3](/LICENSE)
