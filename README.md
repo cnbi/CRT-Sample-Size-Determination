@@ -1,26 +1,22 @@
-# [Power analysis in cluster randomised trials]
+# Power analysis in cluster randomized trials
 
 ## Project organization
 - PG = project-generated
 - HW = human-writable
 - RO = read only
+
 ```
 .
-├── .gitignore
 ├── CITATION.md
 ├── LICENSE
 ├── README.md
-├── data               <- All project data, ignored by git
-│   ├── processed      <- The final, canonical data sets for modeling. (PG)
-│   ├── raw            <- The original, immutable data dump. (RO)
-│   └── temp           <- Intermediate data that has been transformed. (PG)
-├── docs               <- Documentation notebook for users (HW)
-│   ├── manuscript     <- Manuscript source, e.g., LaTeX, Markdown, etc. (HW)
-│   └── reports        <- Other project reports and notebooks (e.g. .Rmd) (HW)
+├── docs               <- Documentation notebook for users.
+│   ├── manuscript     <- Manuscript source, e.g., LaTeX, Markdown, etc. 
+│   └── references        <- File bibtex with all the references.
 ├── results
-│   ├── figures        <- Figures for the manuscript or reports (PG)
-│   └── output         <- Other output for the manuscript or reports (PG)
-└── scripts               <- Scripts with code for this project (HW)
+│   ├── figures        <- Figures for the manuscript or reports.
+│   └── output         <- Other output for the manuscript or reports.
+└── scripts               <- Scripts with code for this project.
 
 ```
 
