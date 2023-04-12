@@ -1,44 +1,41 @@
-##############################
+######################## DATA GENERATION ##############################
 
-# Preparation-------------------------------------------------------------------
-library(lme4)
-library(lmerTest)
-library(MASS)
-
-
-# Design matrix ----------------------------------------------------------------
-# n1: Size of the cluster.
-# n2: Number of clusters.
-# rho: Intraclass correlation.
-# effect.size: Effect size
-n1 <- 10
-n2 <- 100
-rho <- 0.11
-effect_size <- 0.24
-design_matrix <- expand.grid(n1, n2, rho, effect_size)
-
-# Data generation---------------------------------------------------------------
-# Set fixed and random effects
-set.seed(26)
-betas <- rnorm(3)
-b_0 <- betas[1]
-b_1 <- betas[2]
-b_3 <- betas[3]
-e_sd <- rnorm(1) # first level residual variance.
-u0_sd <- rnorm(1) # random intercept.
-u1_sd <- rnorm(1) # random slope.
-
-cov <- rho * u0_sd * u1_sd
-cox_matrix <- matrix(c(u0_sd^2, cov, cov, u1_sd^2), 2, 2)
-u0 <- rep(rnorm(n2, sd = u0_sd))
-e <- rnorm(n1 * n2, sd = e_sd)
-
-# data frame
-# cluster
-cluster <- rep(1:n2, n1)
-# treatment vs. control
-sum_group <- 0
-while (sum_group != n2 / 2) {
-  group <- rbinom(n = n2, size = 1, prob = 0.5)
-  sum_group <- sum(group)
+gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var.u0, var.e = var.e, rho = rho, eff.size = eff.size) {
+    ID <- rep(1:n2, each = n1)
+    condition <- rep(c(0, 1), each = n1 * n2 / 2)
+    # Dummy variables for no intercept model
+    Dintervention <- condition
+    Dcontrol <- 1 - Dintervention
+    mean.interv <- eff.size
+    lmer.list <- vector(mode = 'list', length = n.datasets)
+    bain.list <- vector(mode = 'list', length = n.datasets)
+    for (i in seq(n.datasets)) {
+        # Data generation ----------------------------------------------------------
+        set.seed((i + 90) * i)
+        u0 <- rnorm(n2, 0, sqrt(var.u0)) 
+        u0 <- rep(u0, each = n1)
+        e <- rnorm(n1 * n2, 0, sqrt(var.e))
+        resp <- mean.ctrl * Dcontrol + mean.interv * Dintervention + u0 + e
+        
+        #Data frame
+        data <- cbind(resp, Dintervention, Dcontrol, ID)
+        data <- as.data.frame(data)
+        
+        # Multilevel analysis ---------------------------------------------------------
+        output.lmer <- lmer(resp ~ Dintervention + Dcontrol - 1 + (1 | ID), data = data)
+        # output = lmer(resp ~ condition + (1|ID), data = data)
+        estimates <- fixef(output.lmer) #means
+        cov.intervention <- matrix(vcov(output.lmer)[1], nrow = 1, ncol = 1) #variance-covariance matrix
+        cov.control <- matrix(vcov(output.lmer)[4], nrow = 1, ncol = 1)
+        cov.list <- list(cov.intervention, cov.control)
+        # bain ------------------------------------------------------------------------
+        n.eff <- ((n1 * n2) / (1 + (n1 - 1) * rho))/2
+        output.bain <- bain(estimates, "Dcontrol=Dintervention; Dcontrol<Dintervention", 
+                            n = c(n.eff, n.eff), group_parameters = 1, Sigma = cov.list, joint_parameters = 0)
+        
+        lmer.list[[i]] <- output.lmer
+        bain.list[[i]] <- output.bain
+        return(output = list(Multilevel = lmer.list,
+                             Bayes_factor = bain.list))
+    }
 }
