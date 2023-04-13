@@ -17,7 +17,7 @@ extract_results <- function(n.datasets = n.datasets, data, names.table = names.t
         results[i, 11] <- data[[2]][[i]]$fit$PMPc[4] #posterior model probabilities of Hc
 
     }
-    names(results) <- names.table
+    colnames(results) <- names.table
 
     # Output
     return(results)
