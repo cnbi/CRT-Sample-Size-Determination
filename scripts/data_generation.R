@@ -35,7 +35,11 @@ gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var
         
         lmer.list[[i]] <- output.lmer
         bain.list[[i]] <- output.bain
-        return(output = list(Multilevel = lmer.list,
-                             Bayes_factor = bain.list))
+       
     }
+    return(output = list(Multilevel = lmer.list,
+                         Bayes_factor = bain.list))
 }
+
+# Test ---------------------------------------------------------------------------
+a <- gen_CRT_data(10, n1 = 15, n2 = 30, var.u0 = 0.3, var.e = 0.7, rho = 0.3, eff.size = 0.5)
