@@ -12,7 +12,7 @@
 ## hypothesis: The hypothesis that is going to be tested.
 
 
-SSD_crt <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 100, rho, BF.thresh, 
+SSD_crt <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thresh, 
                     eta = 0.8, plots = TRUE, hypothesis, n1.fixed = TRUE,
                     n2.fixed = TRUE) {
     # Libraries
@@ -64,6 +64,7 @@ SSD_crt <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 100, rho, BF.thresh
     }
     
     # output
+    
     #medians.results <- apply(results, 2, median) #returns a vector for plots
     
     
@@ -78,11 +79,13 @@ SSD_crt <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 100, rho, BF.thresh
     # - Check style with lintR
     # - Talk w/ Uli about the name of the arguments → They should be the same.
     # - Test evaluation function.
-    # - Think a better name for the condition.
+    # - Think a better name for the condition object.
     # - Hypothesis should be entered by researcher. Change this in data_generation function.
     # - Add plots.This could be a function.
     # - Add binary search algorithm.
+    # - Test with time
+    # - 
 
 # Warnings -------------------------------------------------------------------
 # Check that n2 is even.
-# Check that n1.fixed and n2.fixed aro not TRUE both.
+# Check that n1.fixed and n2.fixed are not TRUE both.
