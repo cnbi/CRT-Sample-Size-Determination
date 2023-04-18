@@ -9,6 +9,7 @@ eval_thresh <- function(results.H0 = results.H0, results.H1 = results.H1, BF.thr
     prop.BF21 <- length(which(results.H1[, 'BF.21'] > BF.thresh)) / n.datasets #Or 10? Proportion of BF21 when H1 = TRUE
     # Evaluation
     ifelse(prop.BF12 > eta & prop.BF21 > eta, condition <- TRUE, condition <- FALSE)
+    #browser()
     #Output
     return(condition)
 }

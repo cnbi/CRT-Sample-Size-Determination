@@ -1,6 +1,8 @@
 ######################## DATA GENERATION ##############################
 
-gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var.u0, var.e = var.e, rho = rho, eff.size = eff.size) {
+gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var.u0, 
+                         var.e = var.e, rho = rho, eff.size = eff.size, hypoth = hypoth, 
+                         mean.ctrl = mean.ctrl) {
     ID <- rep(1:n2, each = n1)
     condition <- rep(c(0, 1), each = n1 * n2 / 2)
     # Dummy variables for no intercept model
@@ -20,7 +22,6 @@ gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var
         #Data frame
         data <- cbind(resp, Dintervention, Dcontrol, ID)
         data <- as.data.frame(data)
-        
         # Multilevel analysis ---------------------------------------------------------
         output.lmer <- lmer(resp ~ Dintervention + Dcontrol - 1 + (1 | ID), data = data)
         # output = lmer(resp ~ condition + (1|ID), data = data)
@@ -29,17 +30,21 @@ gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var
         cov.control <- matrix(vcov(output.lmer)[4], nrow = 1, ncol = 1)
         cov.list <- list(cov.intervention, cov.control)
         # bain ------------------------------------------------------------------------
-        n.eff <- ((n1 * n2) / (1 + (n1 - 1) * rho))/2
-        output.bain <- bain(estimates, "Dcontrol=Dintervention; Dcontrol<Dintervention", 
+        n.eff <- ((n1 * n2) / (1 + (n1 - 1) * rho))/2 #Change here rho!
+        output.bain <- bain(estimates, hypoth, 
                             n = c(n.eff, n.eff), group_parameters = 1, Sigma = cov.list, joint_parameters = 0)
         
         lmer.list[[i]] <- output.lmer
         bain.list[[i]] <- output.bain
-       
+        print(i)
     }
     return(output = list(Multilevel = lmer.list,
                          Bayes_factor = bain.list))
 }
 
 # Test ---------------------------------------------------------------------------
-a <- gen_CRT_data(10, n1 = 15, n2 = 30, var.u0 = 0.3, var.e = 0.7, rho = 0.3, eff.size = 0.5)
+#a <- gen_CRT_data(10, n1 = 15, n2 = 30, var.u0 = 0.3, var.e = 0.7, rho = 0.3, eff.size = 0.5)
+
+# TODO
+# - Change rho.
+# - Change according to the hypothesis.

@@ -13,7 +13,7 @@
 
 
 SSD_crt <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thresh, 
-                    eta = 0.8, plots = TRUE, hypothesis, n1.fixed = TRUE,
+                    eta = 0.8, hypothesis, n1.fixed = TRUE,
                     n2.fixed = TRUE) {
     # Libraries
     library(lme4)
@@ -26,47 +26,57 @@ SSD_crt <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thres
     source('data_generation.R')
     source('extract_results.R')
     source('evaluation.R')
-    
+
+    #Hypothesis
+    if (hypothesis == "interv.bigger") {
+        hypothesis <- "Dintervention>Dcontrol"
+    } else if (hypothesis == "interv.smaller") {
+        hypothesis <- "Dintervention<Dcontrol" 
+    }
+    null <- "Dintervention=Dcontrol"
+    hypoth <- paste(null, ";", hypothesis)
     # Starting values
     total.var <- 1
     mean.ctrl <- 0
     var.u0 <- rho * total.var
     var.e <- total.var - var.u0
+    iterations <- 1
     
     # Names of table with results
-    names.table <- c('Dcontrol', 'Dtreatment', 'BF.12', 'BF.21', 'BFc.1', 'BFc.2', 'PMP.1',
+    names.table <- c('Dcontrol', 'Dintervention', 'BF.12', 'BF.21', 'BFc.1', 'BFc.2', 'PMP.1',
                      'PMP.2', 'PMPc.1', 'PMPc.2', 'PMPc.c')
     condition <- FALSE #condition fulfillment indicator
     
     while (condition == FALSE) {
         # If H1 is true
-        data.H1 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, rho, eff.size))
+        data.H1 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, rho, 
+                                              eff.size, hypoth, mean.ctrl))
+        print("Yay data ready!")
         results.H1 <- do.call(extract_results, list(n.datasets, data.H1, names.table = names.table))
-        
+        print("Yay extract results is ready!")
         # If H0 is true
         eff.size <- 0
-        data.H0 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, rho, eff.size))
+        data.H0 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, rho,
+                                              eff.size, hypoth, mean.ctrl))
         results.H0 <-  do.call(extract_results, list(n.datasets, data.H0, names.table = names.table))
-        
         #Evaluation of condition
         condition <- eval_thresh(results.H0 = results.H0, results.H1 = results.H1, 
                                  BF.thresh = BF.thresh, n.datasets = n.datasets, condition = condition, eta = eta)
-        
+        print("Yay evaluation works!")
         # If condition =FALSE then increase the sample. Which n increase?
         if (condition == FALSE){
             if (n1.fixed == TRUE) {
                 n2 = n2 + 2
-            } else (n2.fixed == TRUE){
+            } else if (n2.fixed == TRUE) {
                 n1 = n1 + 1
             }
         }
-        
+        iterations <- iterations + 1
+        print(c("n1: ", n1, " n2: ", n2))
     }
     
     # output
-    
-    #medians.results <- apply(results, 2, median) #returns a vector for plots
-    
+    print(c("Final n1: ", n1, "Final n2: ", n2))
     
 }
 
@@ -77,15 +87,30 @@ SSD_crt <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thres
     # - Think: How is going to be the output?
     # - Think: Should I change BF12 to BF01 and BF21 to BF10?
     # - Check style with lintR
-    # - Talk w/ Uli about the name of the arguments → They should be the same.
     # - Test evaluation function.
     # - Think a better name for the condition object.
     # - Hypothesis should be entered by researcher. Change this in data_generation function.
+    # - What are the hypotheses that are going to be tested?
     # - Add plots.This could be a function.
     # - Add binary search algorithm.
     # - Test with time
-    # - 
+
 
 # Warnings -------------------------------------------------------------------
 # Check that n2 is even.
 # Check that n1.fixed and n2.fixed are not TRUE both.
+
+# Test -------------------------------------------------------------------------
+start.time <- Sys.time()
+SSD_crt(eff.size = 0.5, n.datasets = 10, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
+        n1.fixed = TRUE, n2.fixed = FALSE)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+start.time <- Sys.time()
+SSD_crt(eff.size = 0.4, n.datasets = 10, rho = 0.05, BF.thresh = 2, hypothesis = "interv.bigger",
+        n1.fixed = TRUE, n2.fixed = FALSE)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
