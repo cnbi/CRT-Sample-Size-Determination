@@ -41,6 +41,7 @@ SSD_crt <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thres
     var.u0 <- rho * total.var
     var.e <- total.var - var.u0
     iterations <- 1
+    eff.size0 <- 0
     
     # Names of table with results
     names.table <- c('Dcontrol', 'Dintervention', 'BF.12', 'BF.21', 'BFc.1', 'BFc.2', 'PMP.1',
@@ -55,11 +56,11 @@ SSD_crt <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thres
         results.H1 <- do.call(extract_results, list(n.datasets, data.H1, names.table = names.table))
         print("Yay extract results is ready!")
         # If H0 is true
-        eff.size <- 0
         data.H0 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, rho,
-                                              eff.size, hypoth, mean.ctrl))
+                                              eff.size = eff.size0, hypoth, mean.ctrl))
         results.H0 <-  do.call(extract_results, list(n.datasets, data.H0, names.table = names.table))
         #Evaluation of condition
+        browser()
         condition <- eval_thresh(results.H0 = results.H0, results.H1 = results.H1, 
                                  BF.thresh = BF.thresh, n.datasets = n.datasets, condition = condition, eta = eta)
         print("Yay evaluation works!")
@@ -73,10 +74,13 @@ SSD_crt <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thres
         }
         iterations <- iterations + 1
         print(c("n1: ", n1, " n2: ", n2))
+        if (n2 == 1000) {
+            break
+        }
     }
     
     # output
-    print(c("Final n1: ", n1, "Final n2: ", n2))
+    print(c("Cluster size: ", n1, "Number of clusters: ", n2))
     
 }
 
@@ -109,8 +113,9 @@ time.taken <- end.time - start.time
 time.taken
 
 start.time <- Sys.time()
-SSD_crt(eff.size = 0.4, n.datasets = 10, rho = 0.05, BF.thresh = 2, hypothesis = "interv.bigger",
+SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.05, BF.thresh = 3, hypothesis = "interv.bigger",
         n1.fixed = TRUE, n2.fixed = FALSE)
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken
+

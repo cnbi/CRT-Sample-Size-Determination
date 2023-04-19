@@ -11,6 +11,7 @@ eval_thresh <- function(results.H0 = results.H0, results.H1 = results.H1, BF.thr
     ifelse(prop.BF12 > eta & prop.BF21 > eta, condition <- TRUE, condition <- FALSE)
     #browser()
     #Output
+    print(c("prop.BF12: ", prop.BF12, "prop.BF21: ", prop.BF21))
     return(condition)
 }
 
