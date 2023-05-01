@@ -60,7 +60,6 @@ SSD_crt <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thres
                                               eff.size = eff.size0, hypoth, mean.ctrl))
         results.H0 <-  do.call(extract_results, list(n.datasets, data.H0, names.table = names.table))
         #Evaluation of condition
-        browser()
         condition <- eval_thresh(results.H0 = results.H0, results.H1 = results.H1, 
                                  BF.thresh = BF.thresh, n.datasets = n.datasets, condition = condition, eta = eta)
         print("Yay evaluation works!")
@@ -97,7 +96,9 @@ SSD_crt <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thres
     # - What are the hypotheses that are going to be tested?
     # - Add plots.This could be a function.
     # - Add binary search algorithm.
-    # - Test with time
+    # - Right now only woks for the hypothesis Dintervention > Dcontrol. Generalize a little more.
+    # - Run a simulation to know see the performance under various conditions.
+
 
 
 # Warnings -------------------------------------------------------------------
@@ -114,6 +115,42 @@ time.taken
 
 start.time <- Sys.time()
 SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.05, BF.thresh = 3, hypothesis = "interv.bigger",
+        n1.fixed = TRUE, n2.fixed = FALSE)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+start.time <- Sys.time()
+SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.01, BF.thresh = 3, hypothesis = "interv.bigger",
+        n1.fixed = TRUE, n2.fixed = FALSE)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+# This is weird, it seems like this needs less number of clusters.
+
+start.time <- Sys.time()
+SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
+        n1.fixed = TRUE, n2.fixed = FALSE)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+start.time <- Sys.time()
+SSD_crt(eff.size = 0.2, n.datasets = 20, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
+        n1.fixed = TRUE, n2.fixed = FALSE)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+start.time <- Sys.time()
+SSD_crt(eff.size = 0.2, n.datasets = 20, rho = 0.05, BF.thresh = 3, hypothesis = "interv.bigger",
+        n1.fixed = TRUE, n2.fixed = FALSE)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+start.time <- Sys.time()
+SSD_crt(eff.size = 0.8, n.datasets = 20, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
         n1.fixed = TRUE, n2.fixed = FALSE)
 end.time <- Sys.time()
 time.taken <- end.time - start.time
