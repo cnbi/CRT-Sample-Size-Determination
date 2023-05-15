@@ -16,7 +16,6 @@ gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var
     # Table for results
     results <- matrix(nrow = n.datasets, ncol = 6)
     colnames(results) <- c('Dcontrol', 'Dintervention', 'BF.12', 'BF.21', 'PMP.1', 'PMP.2')
-    
 
     # simulation of data 
     for (i in seq(n.datasets)) {

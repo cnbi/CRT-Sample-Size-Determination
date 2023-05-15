@@ -24,7 +24,6 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
     #Functions
     source('data_generation.R')
     source('evaluation.R')
-    source('print_results.R')
     
     # Starting values
     total.var <- 1
@@ -47,7 +46,6 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
         
         # Evaluation of condition
         # Proportion
-        browser()
         prop.BF12 <- length(which(data_crt[, 'BF.12'] > BF.thresh)) / n.datasets 
         prop.BF21 <- length(which(data_crt[, 'BF.21'] < 1/BF.thresh)) / n.datasets # I am not sure of this, is it really necessary?
         # Evaluation
@@ -63,29 +61,33 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
             }
         }
         
-        # Stop because is crazy the number of clusters is not plausible
+        # Stop because is crazy the number of clusters, is not plausible
         iterations <- iterations + 1
         if (n2 == 1000) {
             break
         }
         
     }
-    
-    # output
-    #class(data_crt) <- "SSD"
-    #return(data_crt)
+    SSD_object <- list("n1" = n1,
+                       "n2" = n2,
+                       "Eta" = prop.BF12,
+                       "data" = data_crt)
+    # Output
     title <- "Final sample size"
     cat(paste("\n", title, "\n", sep = ""))
     row <- paste(rep("=", nchar(title)), collapse = "")
     cat(row, "\n")
-    cat("Using cluster size = ", $n1, " and number of clusters = ", results$n2, "\n")
-    cat("P (BF.12 > BF.threshold | H.1 = ", results$prop.BF12)
+    cat("Hypotheses:", "\n")
+    cat("H1:", hypothesis1, "\n")
+    cat("H2:", hypothesis2, "\n")
+    cat("Using cluster size = ", SSD_object$n1, " and number of clusters = ", SSD_object$n2, "\n")
+    cat("P (BF.12 > BF.threshold | H.1) = ", SSD_object$Eta, "\n")
+    return(SSD_object)
     
 }
 
 
 #TODO:
-# - Think: How is going to be the output?
 # - Check style with lintR
 # - Think a better name for the condition object.
 # - Add plots.This could be a function.
@@ -100,22 +102,20 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
 
 # Test -------------------------------------------------------------------------
 start.time <- Sys.time()
-SSD_crt_inform(eff.size = 0.5, n.datasets = 10, rho = 0.1, BF.thresh = 3, fixed = 'n1')
+a <- SSD_crt_inform(eff.size = 0.5, n.datasets = 100, rho = 0.1, BF.thresh = 3, fixed = 'n1')
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken
 
 start.time <- Sys.time()
-SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.05, BF.thresh = 3, hypothesis = "interv.bigger",
-        n1.fixed = TRUE, n2.fixed = FALSE) #singularity
+SSD_crt_inform(eff.size = 0.4, n.datasets = 15, rho = 0.05, BF.thresh = 3, fixed = "n1") #singularity
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken
 
 
 start.time <- Sys.time()
-SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.01, BF.thresh = 3, hypothesis = "interv.bigger",
-        n1.fixed = TRUE, n2.fixed = FALSE)
+SSD_crt_inform(eff.size = 0.4, n.datasets = 15, rho = 0.01, BF.thresh = 6, fixed = "n1")
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken
