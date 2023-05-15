@@ -1,4 +1,5 @@
-############# Sample Size Determination for Cluster Randomized Trials #############
+############# Sample Size Determination for Cluster Randomized Trials evaluating  #############
+############################### informative hypotheses ######################################
 
 #'@title Sample Size Determination for Cluster Randomized Trials
 #'@description 
@@ -12,8 +13,8 @@
 ## hypothesis: The hypothesis that is going to be tested.
 
 
-SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thresh, 
-                    eta = 0.8, fixed = 'n2') {
+SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thresh, 
+                         eta = 0.8, fixed = 'n2') {
     # Libraries
     library(lme4)
     library(bain)
@@ -23,71 +24,74 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     #Functions
     source('data_generation.R')
     source('evaluation.R')
+    source('print_results.R')
     
     # Starting values
     total.var <- 1
     var.u0 <- rho * total.var
     var.e <- total.var - var.u0
     iterations <- 1
-    eff.size0 <- 0
-    condition <- FALSE #condition fulfillment indicator
+    condition <- FALSE #condition fulfillment indicator 
     
-    #Hypotheses
+    #Hypothesis
     hypothesis1 <- "Dintervention>Dcontrol"
-    null <- "Dintervention=Dcontrol"
-    hypoth <- paste(null, ";", hypothesis1)
+    hypothesis2 <- "Dintervention<Dcontrol" 
+    hypoth <- paste(hypothesis1, ";", hypothesis2)
     
-    # Names of table with results
-    names.table <- c('Dcontrol', 'Dintervention', 'BF.12', 'BF.21', 'PMP.1', 'PMP.2')
-    
+    # Simulation
     while (condition == FALSE) {
         # If H1 is true
-        data.H1 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, rho, 
+        data_crt <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, 
                                               eff.size, hypoth))
         print("Yay data ready!")
-        # If H0 is true
-        data.H0 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, rho,
-                                              eff.size = eff.size0, hypoth, mean.ctrl))
-        results.H0 <-  do.call(extract_results, list(n.datasets, data.H0, names.table = names.table))
-        #Evaluation of condition
-        condition <- eval_thresh(results.H0 = results.H0, results.H1 = results.H1, 
-                                 BF.thresh = BF.thresh, n.datasets = n.datasets, condition = condition, eta = eta)
-        print("Yay evaluation works!")
-        # If condition =FALSE then increase the sample. Which n increase?
+        
+        # Evaluation of condition
+        # Proportion
+        browser()
+        prop.BF12 <- length(which(data_crt[, 'BF.12'] > BF.thresh)) / n.datasets 
+        prop.BF21 <- length(which(data_crt[, 'BF.21'] < 1/BF.thresh)) / n.datasets # I am not sure of this, is it really necessary?
+        # Evaluation
+        ifelse(prop.BF12 > eta & prop.BF21 > eta, condition <- TRUE, condition <- FALSE)
+        
+        # If condition == FALSE then increase the sample.
         if (condition == FALSE) {
+            print(c("Using cluster size: ", n1, " and number of clusters: ", n2, " eta:", prop.BF12))
             if (fixed == 'n1') {
                 n2 = n2 + 2
             } else if (fixed == 'n2') {
                 n1 = n1 + 1
             }
         }
+        
+        # Stop because is crazy the number of clusters is not plausible
         iterations <- iterations + 1
-        print(c("n1: ", n1, " n2: ", n2))
         if (n2 == 1000) {
             break
         }
         
     }
     
+    # output
+    #class(data_crt) <- "SSD"
+    #return(data_crt)
+    title <- "Final sample size"
+    cat(paste("\n", title, "\n", sep = ""))
+    row <- paste(rep("=", nchar(title)), collapse = "")
+    cat(row, "\n")
+    cat("Using cluster size = ", $n1, " and number of clusters = ", results$n2, "\n")
+    cat("P (BF.12 > BF.threshold | H.1 = ", results$prop.BF12)
+    
 }
-
-# output
-print(c("Cluster size: ", n1, "Number of clusters: ", n2))
-
-
 
 
 #TODO:
-    # - Think: If n1.fixed and n2.fixed are FALSE, then what?
-    # - Think: How is going to be the output?
-    # - Think: Should I change BF12 to BF01 and BF21 to BF10? Yes.1 
-    # - Check style with lintR
-    # - Think a better name for the condition object.
-    # - What are the hypotheses that are going to be tested?
-    # - Add plots.This could be a function.
-    # - Add binary search algorithm.
-    # - Run a simulation to know see the performance under various conditions.
-    # - A>B vs B>A
+# - Think: How is going to be the output?
+# - Check style with lintR
+# - Think a better name for the condition object.
+# - Add plots.This could be a function.
+# - Add binary search algorithm.
+# - Run a simulation to know see the performance under various conditions.
+# - Error messages.(class of variables)
 
 
 # Warnings -------------------------------------------------------------------
@@ -96,8 +100,7 @@ print(c("Cluster size: ", n1, "Number of clusters: ", n2))
 
 # Test -------------------------------------------------------------------------
 start.time <- Sys.time()
-SSD_crt(eff.size = 0.5, n.datasets = 10, rho = 0.1, BF.thresh = 3, hypotheses = "vs.null",
-        n1.fixed = TRUE, n2.fixed = FALSE)
+SSD_crt_inform(eff.size = 0.5, n.datasets = 10, rho = 0.1, BF.thresh = 3, fixed = 'n1')
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken

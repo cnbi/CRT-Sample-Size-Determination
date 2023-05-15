@@ -1,16 +1,24 @@
 ######################## DATA GENERATION ##############################
 
 gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var.u0, 
-                         var.e = var.e, rho = rho, eff.size = eff.size, hypoth = hypoth, 
-                         mean.ctrl = mean.ctrl) {
+                         var.e = var.e, mean.interv = eff.size, hypoth = hypoth, 
+                         names.table = names.table) {
+    # Create variables ID  of the cluster and condition
     ID <- rep(1:n2, each = n1)
     condition <- rep(c(0, 1), each = n1 * n2 / 2)
     # Dummy variables for no intercept model
     Dintervention <- condition
     Dcontrol <- 1 - Dintervention
-    mean.interv <- eff.size
+    mean.ctrl <- 0
     lmer.list <- vector(mode = 'list', length = n.datasets)
     bain.list <- vector(mode = 'list', length = n.datasets)
+    
+    # Table for results
+    results <- matrix(nrow = n.datasets, ncol = 6)
+    colnames(results) <- c('Dcontrol', 'Dintervention', 'BF.12', 'BF.21', 'PMP.1', 'PMP.2')
+    
+
+    # simulation of data 
     for (i in seq(n.datasets)) {
         # Data generation ----------------------------------------------------------
         set.seed((i + 90) * i)
@@ -22,6 +30,7 @@ gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var
         #Data frame
         data <- cbind(resp, Dintervention, Dcontrol, ID)
         data <- as.data.frame(data)
+        
         # Multilevel analysis ---------------------------------------------------------
         output.lmer <- lmer(resp ~ Dintervention + Dcontrol - 1 + (1 | ID), data = data)
         estimates <- fixef(output.lmer) #means
@@ -33,21 +42,28 @@ gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var
         var.e.data <- variances[2, 4]
         total.var.data <- var.u0.data + var.e.data
         rho.data <- var.u0.data / total.var.data
+        
         # bain ------------------------------------------------------------------------
         n.eff <- ((n1 * n2) / (1 + (n1 - 1) * rho.data))/2
         output.bain <- bain(estimates, hypoth, 
-                            n = c(n.eff, n.eff), group_parameters = 1, Sigma = cov.list, joint_parameters = 0)
+                            n = c(n.eff, n.eff), group_parameters = 1, Sigma = cov.list, 
+                            joint_parameters = 0)
         
+        # Results ---------------------------------------------------------------------
         lmer.list[[i]] <- output.lmer
         bain.list[[i]] <- output.bain
-        print(i)
+        print(i) #change this
+        #browser()
+        results[i, 1] <- output.bain$estimates[2] # Coefficient control
+        results[i, 2] <- output.bain$estimates[1] # Coefficient intervention
+        results[i, 3] <- output.bain$BFmatrix[1, 2] # Bayes factor H1vsH2 or H1vsH0
+        results[i, 4] <- output.bain$BFmatrix[2, 1] # Bayes factor H2vsH1 or H0vsH1
+        results[i, 5] <- output.bain$fit$PMPa[1] #posterior model probabilities of H1.
+        results[i, 6] <- output.bain$fit$PMPa[2] #posterior model probabilities of H2 or H0
     }
-    return(output = list(Multilevel = lmer.list,
-                         Bayes_factor = bain.list))
+    return(output = results)
 }
 
 # Test ---------------------------------------------------------------------------
 #a <- gen_CRT_data(10, n1 = 15, n2 = 30, var.u0 = 0.3, var.e = 0.7, rho = 0.3, eff.size = 0.5)
 
-# TODO
-# - Change according to the hypothesis.
