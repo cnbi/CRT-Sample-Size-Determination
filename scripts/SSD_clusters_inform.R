@@ -47,9 +47,9 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
         # Evaluation of condition
         # Proportion
         prop.BF12 <- length(which(data_crt[, 'BF.12'] > BF.thresh)) / n.datasets 
-        prop.BF21 <- length(which(data_crt[, 'BF.21'] < 1/BF.thresh)) / n.datasets # I am not sure of this, is it really necessary?
+        #prop.BF21 <- length(which(data_crt[, 'BF.21'] < 1/BF.thresh)) / n.datasets # I am not sure of this, is it really necessary?
         # Evaluation
-        ifelse(prop.BF12 > eta & prop.BF21 > eta, condition <- TRUE, condition <- FALSE)
+        ifelse(prop.BF12 > eta, condition <- TRUE, condition <- FALSE)
         
         # If condition == FALSE then increase the sample.
         if (condition == FALSE) {
