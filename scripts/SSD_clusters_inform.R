@@ -80,7 +80,7 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
     cat("H1:", hypothesis1, "\n")
     cat("H2:", hypothesis2, "\n")
     cat("Using cluster size = ", SSD_object$n1, " and number of clusters = ", SSD_object$n2, "\n")
-    cat("P (BF.12 > BF.threshold | H.1) = ", SSD_object$Eta, "\n")
+    cat("P (BF.12 > ", BF.thresh, " | H.1) = ", SSD_object$Eta, "\n")
     return(SSD_object)
     
 }
