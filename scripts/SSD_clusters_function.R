@@ -14,17 +14,17 @@
 
 SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thresh, 
                     eta = 0.8, fixed = 'n2') {
-    # Libraries
+    # Libraries ----
     library(lme4)
     library(bain)
     library(ggplot2)
     library(dplyr)
     
-    #Functions
+    #Functions ----
     source('data_generation.R')
     # source('print.null')
     
-    # Starting values
+    # Starting values -----
     total.var <- 1
     var.u0 <- rho * total.var
     var.e <- total.var - var.u0
@@ -32,13 +32,21 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     eff.size0 <- 0
     condition <- FALSE #condition fulfillment indicator
     
-    #Hypotheses
+    # Binary search start ----
+    # if (fixed == 'n1') {
+    #     l <- n2
+    # } else if (fixed == 'n2') {
+    #     l <- n1
+    # }
+    # h <- 1000
+    
+    #Hypotheses -----
     hypothesis1 <- "Dintervention>Dcontrol"
     null <- "Dintervention=Dcontrol"
     hypoth <- paste(null, ";", hypothesis1)
     final_SSD <- vector(mode = "list", length = 3)
     
-    # Simulation and evaluation of condition 
+    # Simulation and evaluation of condition  -----
     b.fract <- c(1:3)
     for (b in seq(b.fract)) {
         while (condition == FALSE) {
@@ -53,20 +61,46 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
                                                   eff.size = eff.size0))
             colnames(data.H0) <- c('Dcontrol', 'Dintervention', 'BF.01', 'BF.10', 'PMP.0', 'PMP.1')
             
-            #Evaluation of condition
+            #Evaluation of condition ----
             # Proportion
             prop.BF01 <- length(which(data.H0[, 'BF.01'] > BF.thresh)) / n.datasets 
             prop.BF10 <- length(which(data.H1[, 'BF.10'] > BF.thresh)) / n.datasets 
             # Evaluation
             ifelse(prop.BF01 > eta & prop.BF10 > eta, condition <- TRUE, condition <- FALSE)
             #browser()
-            #Output
-            # If condition =FALSE then increase the sample. Which n increase?
+            # Binomial search algorithm -----
+            if (condition == FALSE) {
+                print("Using cluster size:", n1, "and number of clusters:", n2, 
+                      "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
+                if (fixed == 'n1') {
+                    l <- n2     #lower bound
+                    h <- h   #higher bound
+                    n2 <- round((l + h) / 2)    #point in the middle
+                } else if (fixed == 'n2') {
+                    l <- n1     #lower bound
+                    h <- h    #higher bound
+                    n1 <- round((l + h) / 2)    #point in the middle
+                }
+            } else if (condition == TRUE) {
+                print("Using cluster size:", n1, "and number of clusters:", n2, 
+                      "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
+                if (fixed == 'n1') {
+                    l <- l    #lower bound
+                    h <- n2    #higher bound
+                    n2 <- round((l + h) / 2)    #point in the middle
+                } else if (fixed == 'n2') {
+                    l <- l     #lower bound
+                    h <- n1    #higher bound
+                    n1 <- round((l + h) / 2)    #point in the middle
+                }
+            }
+            # Output ----
             if (condition == FALSE) {
                 print("Using cluster size:", n1, "and number of clusters:", n2, 
                       "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
                 if (fixed == 'n1') {
                     n2 = n2 + 2
+                    
                 } else if (fixed == 'n2') {
                     n1 = n1 + 1
                 }
@@ -88,7 +122,7 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
         final_SSD[[b]] <- SSD_object
     }
     
-    # Output
+    # Final output -----
     for (b in seq(b.fract)) {
         title <- "Final sample size"
         cat(paste("\n", title, "\n", sep = ""))
@@ -117,6 +151,8 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     # - Add plots.This could be a function.
     # - Add binary search algorithm.
     # - Run a simulation to know see the performance under various conditions.
+    # - Add the argument of b fraction.
+    # - Should I also print the b factorion in every iteration?
 
 
 
