@@ -15,7 +15,7 @@
 
 SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thresh, 
                          eta = 0.8, fixed = 'n2') {
-    # Libraries
+    # Libraries -----------------
     library(lme4)
     library(bain)
     library(ggplot2)
@@ -24,7 +24,7 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
     #Functions
     source('data_generation.R')
     
-    # Starting values
+    # Starting values ------------
     total.var <- 1
     var.u0 <- rho * total.var
     var.e <- total.var - var.u0
@@ -44,45 +44,45 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
     hypothesis2 <- "Dintervention<Dcontrol" 
     hypoth <- paste(hypothesis1, ";", hypothesis2)
     
-    # Simulation
+    # Simulation ---------------
     while (condition == FALSE) {
         # If H1 is true
         data_crt <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, 
-                                              eff.size))
+                                              eff.size, hypoth))
         print("Yay data ready!")
         
-        # Evaluation of condition
+        # Evaluation of condition----
         # Proportion
         prop.BF12 <- length(which(data_crt[, 'BF.12'] > BF.thresh)) / n.datasets 
         #prop.BF21 <- length(which(data_crt[, 'BF.21'] < 1/BF.thresh)) / n.datasets # I am not sure of this, is it really necessary?
         # Evaluation
         ifelse(prop.BF12 > eta, condition <- TRUE, condition <- FALSE)
         # Binomial search algorithm
-        if (condition == FALSE) {
-            print("Using cluster size:", n1, "and number of clusters:", n2, 
-                  "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
-            if (fixed == 'n1') {
-                l <- n2     #lower bound
-                h <- h   #higher bound
-                n2 <- round((l + h) / 2)    #point in the middle
-            } else if (fixed == 'n2') {
-                l <- n1     #lower bound
-                h <- h    #higher bound
-                n1 <- round((l + h) / 2)    #point in the middle
-            }
-        } else if (condition == TRUE) {
-            print("Using cluster size:", n1, "and number of clusters:", n2, 
-                  "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
-            if (fixed == 'n1') {
-                l <- l    #lower bound
-                h <- n2    #higher bound
-                n2 <- round((l + h) / 2)    #point in the middle
-            } else if (fixed == 'n2') {
-                l <- l     #lower bound
-                h <- n1    #higher bound
-                n1 <- round((l + h) / 2)    #point in the middle
-            }
-        }
+        # if (condition == FALSE) {
+        #     print("Using cluster size:", n1, "and number of clusters:", n2, 
+        #           "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
+        #     if (fixed == 'n1') {
+        #         l <- n2     #lower bound
+        #         h <- h   #higher bound
+        #         n2 <- round((l + h) / 2)    #point in the middle
+        #     } else if (fixed == 'n2') {
+        #         l <- n1     #lower bound
+        #         h <- h    #higher bound
+        #         n1 <- round((l + h) / 2)    #point in the middle
+        #     }
+        # } else if (condition == TRUE) {
+        #     print("Using cluster size:", n1, "and number of clusters:", n2, 
+        #           "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
+        #     if (fixed == 'n1') {
+        #         l <- l    #lower bound
+        #         h <- n2    #higher bound
+        #         n2 <- round((l + h) / 2)    #point in the middle
+        #     } else if (fixed == 'n2') {
+        #         l <- l     #lower bound
+        #         h <- n1    #higher bound
+        #         n1 <- round((l + h) / 2)    #point in the middle
+        #     }
+        # }
         # If condition == FALSE then increase the sample.
         if (condition == FALSE) {
             print(c("Using cluster size: ", n1, " and number of clusters: ", n2, " eta:", prop.BF12))
@@ -93,18 +93,19 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
             }
         }
         
-        # Stop because is crazy the number of clusters, is not plausible
+        # Stop because the number of clusters is crazy, is not plausible
         iterations <- iterations + 1
         if (n2 == 1000) {
             break
         }
         
     }
+    # Final output -----------
     SSD_object <- list("n1" = n1,
                        "n2" = n2,
                        "Eta" = prop.BF12,
                        "data" = data_crt)
-    # Output
+    
     title <- "Final sample size"
     cat(paste("\n", title, "\n", sep = ""))
     row <- paste(rep("=", nchar(title)), collapse = "")
@@ -113,7 +114,7 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
     cat("H1:", hypothesis1, "\n")
     cat("H2:", hypothesis2, "\n")
     cat("Using cluster size = ", SSD_object$n1, " and number of clusters = ", SSD_object$n2, "\n")
-    cat("P (BF.12 > ", BF.thresh, " | H.1) = ", SSD_object$Eta, "\n")
+    cat("P (BF.12 > ", BF.thresh, " | H1) = ", SSD_object$Eta, "\n")
     return(SSD_object)
     
 }
@@ -123,7 +124,6 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
 # - Check style with lintR
 # - Think a better name for the condition object.
 # - Add plots.This could be a function.
-# - Add binary search algorithm.
 # - Run a simulation to know see the performance under various conditions.
 # - Error messages.(class of variables)
 
