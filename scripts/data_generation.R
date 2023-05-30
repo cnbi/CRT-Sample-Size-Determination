@@ -1,7 +1,7 @@
 ######################## DATA GENERATION ##############################
 
 gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var.u0, 
-                         var.e = var.e, mean.interv = eff.size) {
+                         var.e = var.e, mean.interv = eff.size, hypoth) {
     # Create variables ID  of the cluster and condition
     ID <- rep(1:n2, each = n1)
     condition <- rep(c(0, 1), each = n1 * n2 / 2)
