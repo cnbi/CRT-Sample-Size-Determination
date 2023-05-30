@@ -13,7 +13,7 @@
 
 
 SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thresh, 
-                    eta = 0.8, fixed = 'n2') {
+                    eta = 0.8, fixed = 'n2', b.fract = 3) {
     # Libraries ----
     library(lme4)
     library(bain)
@@ -47,18 +47,17 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     final_SSD <- vector(mode = "list", length = 3)
     
     # Simulation and evaluation of condition  -----
-    b.fract <- c(1:3)
     for (b in seq(b.fract)) {
         while (condition == FALSE) {
             # If H1 is true
             data.H1 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, 
-                                                  eff.size))
+                                                  eff.size, hypoth))
             colnames(data.H1) <- c('Dcontrol', 'Dintervention', 'BF.01', 'BF.10', 'PMP.0', 'PMP.1')
             
-            print("Yay data ready!")
+
             # If H0 is true
             data.H0 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e,
-                                                  eff.size = eff.size0))
+                                                  mean.interv = eff.size0, hypoth))
             colnames(data.H0) <- c('Dcontrol', 'Dintervention', 'BF.01', 'BF.10', 'PMP.0', 'PMP.1')
             
             #Evaluation of condition ----
@@ -69,49 +68,49 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
             ifelse(prop.BF01 > eta & prop.BF10 > eta, condition <- TRUE, condition <- FALSE)
             #browser()
             # Binomial search algorithm -----
-            if (condition == FALSE) {
-                print("Using cluster size:", n1, "and number of clusters:", n2, 
-                      "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
-                if (fixed == 'n1') {
-                    l <- n2     #lower bound
-                    h <- h   #higher bound
-                    n2 <- round((l + h) / 2)    #point in the middle
-                } else if (fixed == 'n2') {
-                    l <- n1     #lower bound
-                    h <- h    #higher bound
-                    n1 <- round((l + h) / 2)    #point in the middle
-                }
-            } else if (condition == TRUE) {
-                print("Using cluster size:", n1, "and number of clusters:", n2, 
-                      "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
-                if (fixed == 'n1') {
-                    l <- l    #lower bound
-                    h <- n2    #higher bound
-                    n2 <- round((l + h) / 2)    #point in the middle
-                } else if (fixed == 'n2') {
-                    l <- l     #lower bound
-                    h <- n1    #higher bound
-                    n1 <- round((l + h) / 2)    #point in the middle
-                }
-            }
+            # if (condition == FALSE) {
+            #     print("Using cluster size:", n1, "and number of clusters:", n2, 
+            #           "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
+            #     if (fixed == 'n1') {
+            #         l <- n2     #lower bound
+            #         h <- h   #higher bound
+            #         n2 <- round((l + h) / 2)    #point in the middle
+            #     } else if (fixed == 'n2') {
+            #         l <- n1     #lower bound
+            #         h <- h    #higher bound
+            #         n1 <- round((l + h) / 2)    #point in the middle
+            #     }
+            # } else if (condition == TRUE) {
+            #     print("Using cluster size:", n1, "and number of clusters:", n2, 
+            #           "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
+            #     if (fixed == 'n1') {
+            #         l <- l    #lower bound
+            #         h <- n2    #higher bound
+            #         n2 <- round((l + h) / 2)    #point in the middle
+            #     } else if (fixed == 'n2') {
+            #         l <- l     #lower bound
+            #         h <- n1    #higher bound
+            #         n1 <- round((l + h) / 2)    #point in the middle
+            #     }
+            # }
             # Output ----
             if (condition == FALSE) {
                 print("Using cluster size:", n1, "and number of clusters:", n2, 
                       "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
                 if (fixed == 'n1') {
                     n2 = n2 + 2
-                    
                 } else if (fixed == 'n2') {
                     n1 = n1 + 1
                 }
             }
+            
             iterations <- iterations + 1
-            print(c("n1: ", n1, " n2: ", n2))
             if (n2 == 1000) {
                 break
             }
             
         }
+        
         SSD_object <- list("n1" = n1,
                            "n2" = n2,
                            "Proportion.BF01" = prop.BF01,
@@ -135,25 +134,18 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
             "cluster size = ", final_SSD[[b]]$n1, 
             " and number of clusters = ", final_SSD[[b]]$n2, "\n")
         cat("P (BF.01 >", BF.thresh, " | H0) = ", final_SSD[[b]]$Proportion.BF01, "\n")
-        cat("P (BF.10 >", BF.thresh, " | H0) = ", final_SSD[[b]]$Proportion.BF10, "\n")
+        cat("P (BF.10 >", BF.thresh, " | H1) = ", final_SSD[[b]]$Proportion.BF10, "\n")
     }
-
+    
     return(final_SSD)
 }
 
 
 
 #TODO:
-    # - Think: If n1.fixed and n2.fixed are FALSE, then what?
-    # - Check style with lintR
-    # - Think a better name for the condition object.
-    # - What are the hypotheses that are going to be tested?
-    # - Add plots.This could be a function.
-    # - Add binary search algorithm.
-    # - Run a simulation to know see the performance under various conditions.
-    # - Add the argument of b fraction.
-    # - Should I also print the b factorion in every iteration?
-
+# - Check style with lintR
+# - Think a better name for the condition object.
+# - Run a simulation to know see the performance under various conditions.
 
 
 # Warnings -------------------------------------------------------------------
@@ -162,8 +154,8 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
 
 # Test -------------------------------------------------------------------------
 start.time <- Sys.time()
-SSD_crt(eff.size = 0.5, n.datasets = 10, rho = 0.1, BF.thresh = 3, hypotheses = "vs.null",
-        n1.fixed = TRUE, n2.fixed = FALSE)
+nulla <- SSD_crt_null(eff.size = 0.5, n.datasets = 10, rho = 0.1, BF.thresh = 3, fixed = "n1", 
+             b.fract = 2)
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken
