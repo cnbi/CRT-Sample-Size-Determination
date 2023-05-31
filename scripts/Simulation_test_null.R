@@ -1,4 +1,5 @@
-###########################TEST INFORMATIVE HYPOTHESES ############################
+########################## TEST NULL HYPOTHESIS ################################
+
 
 # Design matrix
 n1 <- c(5, 10, 20, 40)
@@ -6,7 +7,9 @@ n2 <- c(30, 60 ,90)
 rho <- c(0.25, 0.05, 0.1) #Intraclass correlation
 eff.size <- c(0.2, 0.5, 0.8)
 bf.thresh <- c(1, 3, 5)
-fix <- c("n1", "n2")
+#fix <- c("n1", "n2") #Maybe not
+b.fract <- c(1, 2, 3)
+
 design.matrix <- expand.grid(n1, n2, rho, eff.size, bf.thresh)
 
 nrow.design <- nrow(design.matrix)
@@ -24,7 +27,9 @@ for (Row in seq(nrow.design)) {
                                   fixed = design.matrix[Row, 6])
     # Save results
     save(ssd_results, file = paste("ResultRow", Row, ".Rdata", sep = ""))
-
+    
 }
+
+# Combine in one dataset
 
 # Plots
