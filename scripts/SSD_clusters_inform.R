@@ -57,7 +57,7 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
         #prop.BF21 <- length(which(data_crt[, 'BF.21'] < 1/BF.thresh)) / n.datasets # I am not sure of this, is it really necessary?
         # Evaluation
         ifelse(prop.BF12 > eta, condition <- TRUE, condition <- FALSE)
-        # Binomial search algorithm
+        # Binary search algorithm
         # if (condition == FALSE) {
         #     print("Using cluster size:", n1, "and number of clusters:", n2, 
         #           "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")

@@ -67,7 +67,7 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
             # Evaluation
             ifelse(prop.BF01 > eta & prop.BF10 > eta, condition <- TRUE, condition <- FALSE)
             #browser()
-            # Binomial search algorithm -----
+            # Binary search algorithm -----
             # if (condition == FALSE) {
             #     print("Using cluster size:", n1, "and number of clusters:", n2, 
             #           "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
