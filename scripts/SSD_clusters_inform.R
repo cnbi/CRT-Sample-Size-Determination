@@ -12,13 +12,11 @@
 ## plots: Logical argument. If TRUE the function print the plots.
 ## hypothesis: The hypothesis that is going to be tested.
 
-
 SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thresh, 
                          eta = 0.8, fixed = 'n2') {
     # Libraries -----------------
     library(lme4)
     library(bain)
-    library(ggplot2)
     library(dplyr)
     
     #Functions

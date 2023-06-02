@@ -17,7 +17,6 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     # Libraries ----
     library(lme4)
     library(bain)
-    library(ggplot2)
     library(dplyr)
     
     #Functions ----
