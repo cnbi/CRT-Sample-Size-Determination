@@ -47,20 +47,21 @@ save(times, file = "times_inform.Rdata")
 results_all <- matrix(NA, ncol = 6, nrow = nrow.design)
 for (i in seq(nrow.design)) {
     load(file.path("ResultsRow", i, ".Rdata", sep = ""))
-    median.BF12 <- median(ssd_results$BF.12)
-    median.BF21 <- median(ssd_results$BF.21)
-    mean.PMP1 <- mean(ssd_results$PMP.1)
-    mean.PMP2 <- mean(ssd_results$PMP.2)
-    mean.n2 <- mean(ssd_results$n2)
-    mode.n2 <- mode(ssd_results$n2)
-    results_all[i, ] <- c(median.BF21, median.BF12, mean.PMP1, mean.PMP2, mean.n2,
-                          mode.n2)
+    median.BF12 <- median(ssd_results[[4]][, "BF.12"])
+    median.BF21 <- median(ssd_results[[4]][, "BF.21"]) # I think I can eliminate this one
+    mean.PMP1 <- mean(ssd_results[[4]][, "PMP.1"])
+    mean.PMP2 <- mean(ssd_results[[4]][, "PMP.2"])
+    n2 <- ssd_results$n2
+    eta <- ssd_results$eta
+    n1 <- ssd_results$n1
+    results_all[i, ] <- c(median.BF21, median.BF12, mean.PMP1, mean.PMP2, n2,
+                          eta, n1)
 }
 head(results_all)
 #names(design_results) <- names(design.matrix)
 results_all <- as.data.frame(cbind(design.matrix, results_all))
 names(results_all) <- c(names(design.matrix), "med.BF12", "med.BF21", "mean.PMP1",
-                        "mean.PMP2", "mean.n2", "mode.n2")
+                        "mean.PMP2", "n2", "eta", "n1")
 save(results_all, file = "AllResults.Rdata")
 
 # Plots ------------------------------------------------------------------------------

@@ -94,8 +94,8 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
             # }
             # Output ----
             if (condition == FALSE) {
-                print("Using cluster size:", n1, "and number of clusters:", n2, 
-                      "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
+                print(c("Using cluster size: ", n1, "and number of clusters: ", n2, 
+                      "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
                 if (fixed == 'n1') {
                     n2 = n2 + 2
                 } else if (fixed == 'n2') {
@@ -130,8 +130,8 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
         cat("H0:", null, "\n")
         cat("H1:", hypothesis1, "\n")
         cat("Using b fraction = ", final_SSD[[b]]$b.frac, 
-            "cluster size = ", final_SSD[[b]]$n1, 
-            " and number of clusters = ", final_SSD[[b]]$n2, "\n")
+            ", cluster size = ", final_SSD[[b]]$n1, 
+            ", and number of clusters = ", final_SSD[[b]]$n2, "\n")
         cat("P (BF.01 >", BF.thresh, " | H0) = ", final_SSD[[b]]$Proportion.BF01, "\n")
         cat("P (BF.10 >", BF.thresh, " | H1) = ", final_SSD[[b]]$Proportion.BF10, "\n")
     }
@@ -154,7 +154,7 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
 # Test -------------------------------------------------------------------------
 start.time <- Sys.time()
 nulla <- SSD_crt_null(eff.size = 0.5, n.datasets = 10, rho = 0.1, BF.thresh = 3, fixed = "n1", 
-             b.fract = 2)
+             b.fract = 3)
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken
@@ -183,8 +183,8 @@ time.taken <- end.time - start.time
 time.taken
 
 start.time <- Sys.time()
-SSD_crt(eff.size = 0.2, n.datasets = 20, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
-        n1.fixed = TRUE, n2.fixed = FALSE)
+try <- SSD_crt_null(eff.size = 0.2, n.datasets = 20, rho = 0.1, BF.thresh = 3,fixed = "n1", 
+        b.fract = 3)
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken
