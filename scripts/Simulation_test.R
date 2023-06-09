@@ -4,8 +4,7 @@
 library(dplyr)
 library(ggplot2)
 library(scales) # For scales in plots
-library(tictoc) #For time
-library(bench) #For time
+
 
 # Functions needed -------------------------------------------------------------
 source("SSD_clusters_inform.R")
@@ -28,19 +27,22 @@ times <- matrix(NA, nrow = nrow.design, ncol = 13)
 
 # Loop for every row -----------------------------------------------------------
 for (Row in seq(nrow.design)) {
+    start <- Sys.time()
     # function
-    times[Row, ] <- bench::mark( ssd_results <- SSD_crt_inform(eff.size = design.matrix[Row, 4], 
+    ssd_results <- SSD_crt_inform(eff.size = design.matrix[Row, 4], 
                                                   n1 = design.matrix[Row, 1],
                                                   n2 = design.matrix[Row, 2],
                                                   n.datasets = 1000,
                                                   rho = design.matrix[Row, 3],
                                                   BF.thresh = design.matrix[Row, 5],
                                                   eta = 0.8, 
-                                                  fixed = "n1") )
+                                                  fixed = "n1")
 
     # Save results
+    times[Row] <- Sys.time() - start
     save(ssd_results, file = paste("ResultsRow", Row, ".Rdata", sep = ""))
 }
+times <- as.data.frame(cbind(design.matrix, times))
 save(times, file = "times_inform.Rdata")
 
 # Collect results --------------------------------------------------------------

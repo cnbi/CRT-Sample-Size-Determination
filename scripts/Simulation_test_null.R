@@ -20,24 +20,26 @@ design.matrix <- expand.grid(n1, n2, rho, eff.size, bf.thresh)
 names(design.matrix) <- c("n1", "n2", "rho", "eff.size", "bf.thresh")
 
 nrow.design <- nrow(design.matrix)
-times_null <- matrix(NA, nrow = nrow.design, ncol = 13)
-
+times_null <- matrix(NA, nrow = nrow.design, ncol = 1)
 b <- 3
 
 # Loop for every row -----------------------------------------------------------
 for (Row in seq(nrow.design)) {
+    start <- Sys.time()
     # function
-    times_null[Row, ] <- bench::mark( ssd_results_null <- SSD_crt_null(eff.size = design.matrix[Row, 4],
+    ssd_results_null <- SSD_crt_null(eff.size = design.matrix[Row, 4],
                                      n1 = design.matrix[Row, 1],
                                      n2 = design.matrix[Row, 2],
-                                     n.datasets = 1000,
+                                     n.datasets = 200,
                                      rho = design.matrix[Row, 3],
                                      BF.thresh = design.matrix[Row, 5],
-                                     eta = 0.8, fixed = "n1", b.fract = b) )
+                                     eta = 0.8, fixed = "n1", b.fract = b)
     # Save results
+    times_null[Row] <- Sys.time() - start
     save(ssd_results_null, file = paste("ResultNullRow", Row, ".Rdata", sep = ""))
     
 }
+times_null <- as.data.frame(cbind(design.matrix, times_null))
 save(times_null, file = "times_null.Rdata")
 # Collect results --------------------------------------------------------------
 
@@ -88,3 +90,42 @@ plots.SSD(2, data = results_null_all, x = n1, y = mean.n2, grid_x = eff.size,
           grid_y = rho, title = "Numer of clusters in function of clusters' size",
           subtitle = "H1:Dintervention>Dcontrol", x_lab = "Clusters' size",
           y_lab = "Number of clusters")
+
+
+########################### ONE CELL SIMULATION ################################
+# Libraries --------------------------------------------------------------------
+library(dplyr)
+library(ggplot2)
+library(scales) # For scales in plots
+library(tictoc)
+
+# Functions --------------------------------------------------------------------
+source("SSD_clusters_function.R")
+source("plots_SSD.R")
+
+# Design matrix ----------------------------------------------------------------
+n1 <- c(5, 10, 20, 40)
+n2 <- c(30, 60 ,90)
+rho <- c(0.25, 0.05, 0.1) #Intraclass correlation
+eff.size <- c(0.2, 0.5, 0.8)
+bf.thresh <- c(1, 3, 5)
+#fix <- c("n1", "n2") #Maybe not
+design.matrix <- expand.grid(n1, n2, rho, eff.size, bf.thresh)
+names(design.matrix) <- c("n1", "n2", "rho", "eff.size", "bf.thresh")
+
+nrow.design <- nrow(design.matrix)
+times_null <- matrix(NA, nrow = nrow.design, ncol = 1)
+#times_null <- as.data.frame(cbind(design.matrix, times_null))
+b <- 3
+Row <- 1
+start <- Sys.time()
+ssd_results_null <- SSD_crt_null(eff.size = design.matrix[Row, 4],
+                                 n1 = design.matrix[Row, 1],
+                                 n2 = design.matrix[Row, 2],
+                                 n.datasets = 100,
+                                 rho = design.matrix[Row, 3],
+                                 BF.thresh = design.matrix[Row, 5],
+                                 eta = 0.8, fixed = "n1", b.fract = b)
+times_null[Row] <- Sys.time() - start
+# Save results
+save(ssd_results_null, file = paste("ResultNullRow", Row, ".Rdata", sep = ""))
