@@ -30,14 +30,15 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     iterations <- 1
     eff.size0 <- 0
     condition <- FALSE #condition fulfillment indicator
+    best_result <- FALSE
     
     # Binary search start ----
-    # if (fixed == 'n1') {
-    #     l <- n2
-    # } else if (fixed == 'n2') {
-    #     l <- n1
-    # }
-    # h <- 1000
+    if (fixed == 'n1') {
+        l <- n2
+    } else if (fixed == 'n2') {
+        l <- n1
+    }
+    h <- 1000
     
     #Hypotheses -----
     hypothesis1 <- "Dintervention>Dcontrol"
@@ -47,12 +48,11 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     
     # Simulation and evaluation of condition  -----
     for (b in seq(b.fract)) {
-        while (condition == FALSE) {
+        while (best_result == FALSE) {
             # If H1 is true
             data.H1 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, 
-                                                  eff.size, hypoth))
+                                                  mean.interv = eff.size, hypoth))
             colnames(data.H1) <- c('Dcontrol', 'Dintervention', 'BF.01', 'BF.10', 'PMP.0', 'PMP.1')
-            
 
             # If H0 is true
             data.H0 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e,
@@ -67,41 +67,57 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
             ifelse(prop.BF01 > eta & prop.BF10 > eta, condition <- TRUE, condition <- FALSE)
             #browser()
             # Binary search algorithm -----
-            # if (condition == FALSE) {
-            #     print("Using cluster size:", n1, "and number of clusters:", n2, 
-            #           "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
-            #     if (fixed == 'n1') {
-            #         l <- n2     #lower bound
-            #         h <- h   #higher bound
-            #         n2 <- round((l + h) / 2)    #point in the middle
-            #     } else if (fixed == 'n2') {
-            #         l <- n1     #lower bound
-            #         h <- h    #higher bound
-            #         n1 <- round((l + h) / 2)    #point in the middle
-            #     }
-            # } else if (condition == TRUE) {
-            #     print("Using cluster size:", n1, "and number of clusters:", n2, 
-            #           "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, sep = " ")
-            #     if (fixed == 'n1') {
-            #         l <- l    #lower bound
-            #         h <- n2    #higher bound
-            #         n2 <- round((l + h) / 2)    #point in the middle
-            #     } else if (fixed == 'n2') {
-            #         l <- l     #lower bound
-            #         h <- n1    #higher bound
-            #         n1 <- round((l + h) / 2)    #point in the middle
-            #     }
-            # }
-            # Output ----
             if (condition == FALSE) {
-                print(c("Using cluster size: ", n1, "and number of clusters: ", n2, 
+                print(c("Using cluster size:", n1, "and number of clusters:", n2,
                       "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
                 if (fixed == 'n1') {
-                    n2 = n2 + 2
+                    l <- n2                     #lower bound
+                    h <- h                      #higher bound
+                    n2 <- round((l + h) / 2)    #point in the middle
+                    ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
                 } else if (fixed == 'n2') {
-                    n1 = n1 + 1
+                    l <- n1                     #lower bound
+                    h <- h                      #higher bound
+                    n1 <- round((l + h) / 2)    #point in the middle
+                }
+            } else if (condition == TRUE) {
+                if (fixed == 'n1') {
+                    if (n2 - l == 2) {
+                        best_result == TRUE
+                        break
+                    } else {
+                        print(c("Using cluster size:", n1, "and number of clusters:", n2,
+                                "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
+                        l <- l                      #lower bound
+                        h <- n2                     #higher bound
+                        n2 <- round((l + h) / 2)    #point in the middle
+                        ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
+                    }
+
+                } else if (fixed == 'n2') {
+                    if (n1 - l == 1) {
+                        best_result == TRUE
+                        break
+                    } else {
+                        print(c("Using cluster size:", n1, "and number of clusters:", n2,
+                                "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
+                        l <- l                      #lower bound
+                        h <- n1                     #higher bound
+                        n1 <- round((l + h) / 2)    #point in the middle
+                    }
+
                 }
             }
+            # Output ----
+            # if (condition == FALSE) {
+            #     print(c("Using cluster size: ", n1, "and number of clusters: ", n2, 
+            #           "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
+            #     if (fixed == 'n1') {
+            #         n2 = n2 + 2
+            #     } else if (fixed == 'n2') {
+            #         n1 = n1 + 1
+            #     }
+            # }
             
             iterations <- iterations + 1
             if (n2 == 1000) {
@@ -152,54 +168,54 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
 # Check that n1.fixed and n2.fixed are not TRUE both.
 
 # Test -------------------------------------------------------------------------
-start.time <- Sys.time()
-nulla <- SSD_crt_null(eff.size = 0.5, n.datasets = 10, rho = 0.1, BF.thresh = 3, fixed = "n1", 
-             b.fract = 3)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-
-start.time <- Sys.time()
-SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.05, BF.thresh = 3, hypothesis = "interv.bigger",
-        n1.fixed = TRUE, n2.fixed = FALSE) #singularity
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-
-
-start.time <- Sys.time()
-SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.01, BF.thresh = 3, hypothesis = "interv.bigger",
-        n1.fixed = TRUE, n2.fixed = FALSE)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-# This is weird, it seems like this needs less number of clusters.
-
-start.time <- Sys.time()
-SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
-        n1.fixed = TRUE, n2.fixed = FALSE)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-
-start.time <- Sys.time()
-try <- SSD_crt_null(eff.size = 0.2, n.datasets = 20, rho = 0.1, BF.thresh = 3,fixed = "n1", 
-        b.fract = 3)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-
-start.time <- Sys.time()
-SSD_crt(eff.size = 0.2, n.datasets = 20, rho = 0.05, BF.thresh = 3, hypothesis = "interv.bigger",
-        n1.fixed = TRUE, n2.fixed = FALSE)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-
-start.time <- Sys.time()
-SSD_crt(eff.size = 0.8, n.datasets = 20, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
-        n1.fixed = TRUE, n2.fixed = FALSE)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
+# start.time <- Sys.time()
+# nulla <- SSD_crt_null(eff.size = 0.5, n.datasets = 10, rho = 0.1, BF.thresh = 3, fixed = "n1", 
+#              b.fract = 3)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# 
+# start.time <- Sys.time()
+# SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.05, BF.thresh = 3, hypothesis = "interv.bigger",
+#         n1.fixed = TRUE, n2.fixed = FALSE) #singularity
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# 
+# 
+# start.time <- Sys.time()
+# SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.01, BF.thresh = 3, hypothesis = "interv.bigger",
+#         n1.fixed = TRUE, n2.fixed = FALSE)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# # This is weird, it seems like this needs less number of clusters.
+# 
+# start.time <- Sys.time()
+# SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
+#         n1.fixed = TRUE, n2.fixed = FALSE)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# 
+# start.time <- Sys.time()
+# try <- SSD_crt_null(eff.size = 0.2, n.datasets = 20, rho = 0.1, BF.thresh = 3,fixed = "n1", 
+#         b.fract = 3)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# 
+# start.time <- Sys.time()
+# SSD_crt(eff.size = 0.2, n.datasets = 20, rho = 0.05, BF.thresh = 3, hypothesis = "interv.bigger",
+#         n1.fixed = TRUE, n2.fixed = FALSE)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# 
+# start.time <- Sys.time()
+# SSD_crt(eff.size = 0.8, n.datasets = 20, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
+#         n1.fixed = TRUE, n2.fixed = FALSE)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
 
