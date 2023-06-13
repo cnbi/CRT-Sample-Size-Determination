@@ -12,7 +12,7 @@ source("plots_SSD.R")
 # Design matrix ----------------------------------------------------------------
 n1 <- c(5, 10, 20, 40)
 n2 <- c(30, 60 ,90)
-rho <- c(0.25, 0.05, 0.1) #Intraclass correlation
+rho <- c(0.25, 0.1, 0.05) #Intraclass correlation
 eff.size <- c(0.2, 0.5, 0.8)
 bf.thresh <- c(1, 3, 5)
 #fix <- c("n1", "n2") #Maybe not
@@ -43,10 +43,12 @@ times_null <- as.data.frame(cbind(design.matrix, times_null))
 save(times_null, file = "times_null.Rdata")
 # Collect results --------------------------------------------------------------
 
-results_null_all <- matrix(NA, ncol = 6, nrow = nrow.design * b)
+results_null_all <- matrix(NA, ncol = 10, nrow = nrow.design * b)
 r <- 1
 for (i in seq(nrow.design)) {
-    load(file.path("ResultsRow", i, ".Rdata", sep = ""))
+    load(paste("ResultNullRow", i, ".Rdata", sep = ""))
+    #load(file.path("ResultNullRow", i, ".Rdata", sep = ""))
+    #browser()
     r <- r
     for (j in seq(b)) {
         median.BF01 <- median(ssd_results_null[[j]][[6]][, "BF.01"])
@@ -67,30 +69,84 @@ for (i in seq(nrow.design)) {
     
     
 }
-design_null <- rep(design.matrix, each = b)
+design_null <- design.matrix
+design_null$ind <- seq(nrow.design)
+design_null <- design_null[rep(1:nrow(design_null), times = 3), ]
+design_null <- design_null[order(design_null$ind),]
 b.frac <- rep(seq(b), nrow.design)
 results_all <- as.data.frame(cbind(design_null, b.frac, results_null_all))
 head(results_null_all)
-names(results_null_all) <- c(names(design.matrix), b.frac, "med.BF01", "med.BF10",
+head(results_all)
+names(results_all) <- c(names(design_null), "b", "med.BF01", "med.BF10",
                              "mean.PMP0.H0", "mean.PMP1.H0", "mean.PMP0.H1",
-                             "mean.PMP1.H1", "n2", "eta.BF01", "eta.BF10", "n1")
-save(results_null_all, file = "AllNullResults.Rdata")
+                             "mean.PMP1.H1", "n2.final", "eta.BF01", "eta.BF10", "n1.final")
+save(results_all, file = "AllNullResults.Rdata")
 
 # Plots --------------------------------
 ## Bayes factors --------------------
-
-plots.SSD(1, data = results_null_all, y = med.BF01, grid_x = n1, grid_y = n2,
+#rho and bf.threshold=same
+plots.SSD(1, data = results_all[which(results_all[ , "rho"] == 0.2 & results_all[ , "bf.thresh"] == 3), ], 
+          y = med.BF01, grid_x = "n1.final", grid_y = "n2.final",
           title = "Bayes Factor H1 vs H2", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol",
           x_lab = "Bayes Factor", y_lab = "Frequency", color = eff.size)
 plots.SSD(1, data = results_null_all, y = med.BF10, grid_x = n1, grid_y = n2,
           title = "Bayes Factor H1 vs H2", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol",
           x_lab = "Bayes Factor", y_lab = "Frequency", color = eff.size)
+test <- results_all[which(results_all$bf.thresh == 3 & results_all$b == 1), ]
+ggplot(test, aes(med.BF01, color = as.factor(n1), fill = as.factor(n1))) +
+    geom_histogram(alpha = 0.5, bins = 100) +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff.size), labeller = label_both) +
+    labs(title = "Bayes Factor H0 vs H1", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
+    xlab("Bayes Factor") + ylab("Frequency") #+ 
+    #scale_y_log10(breaks = 10^(2:13), labels = trans_format("log10", math_format(10^.x)))
+ggplot(test, aes(round(med.BF01), color = as.factor(n1), fill = as.factor(n1))) +
+    geom_histogram(alpha = 0.5, bins = 100) +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff.size), labeller = label_both) +
+    labs(title = "Bayes Factor H0 vs H1", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
+    xlab("Bayes Factor") + ylab("Frequency")
+
+
 ## Sample size -------------------------
-plots.SSD(2, data = results_null_all, x = n1, y = mean.n2, grid_x = eff.size,
+plots.SSD(2, data = results_all, x = n1, y = n2.final, grid_x = eff.size,
           grid_y = rho, title = "Numer of clusters in function of clusters' size",
-          subtitle = "H1:Dintervention>Dcontrol", x_lab = "Clusters' size",
+          subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol", 
+          x_lab = "Clusters' size",
           y_lab = "Number of clusters")
 
+
+ggplot(test, aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) +
+    geom_point() + geom_line() +
+    facet_grid(rows = vars(rho), cols = vars(eff.size), labeller = label_both) +
+    labs(title = "Numer of clusters in function of clusters' size", 
+         subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
+    xlab("Clusters' size") + ylab("Number of clusters") 
+
+
+### Final -------------------------------------------------------------------
+ggplot(test[which(test$eff.size == 0.2),], 
+       aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) +
+    geom_point() + geom_line() + facet_grid(cols = vars(rho)) +
+    labs(title = "Number of clusters in function of clusters' size", 
+         subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
+    xlab("Clusters' size") + ylab("Number of clusters")
+
+ggplot(test[which(test$eff.size == 0.5),], 
+       aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) +
+    geom_point() + geom_line() + facet_grid(cols = vars(rho)) +
+    labs(title = "Number of clusters in function of clusters' size", 
+         subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
+    xlab("Clusters' size") + ylab("Number of clusters")
+
+ggplot(test[which(test$eff.size == 0.8),], 
+       aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) +
+    geom_point() + geom_line() + facet_grid(cols = vars(rho)) +
+    labs(title = "Number of clusters in function of clusters' size", 
+         subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
+    xlab("Clusters' size") + ylab("Number of clusters")
+# Maybe change the lines'width 
+# Note that BF threshold and b fraction are constant!
 
 ########################### ONE CELL SIMULATION ################################
 # Libraries --------------------------------------------------------------------
