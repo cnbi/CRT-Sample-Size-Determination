@@ -51,12 +51,12 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
         while (best_result == FALSE) {
             # If H1 is true
             data.H1 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, 
-                                                  mean.interv = eff.size, hypoth))
+                                                  mean.interv = eff.size, hypoth, b))
             colnames(data.H1) <- c('Dcontrol', 'Dintervention', 'BF.01', 'BF.10', 'PMP.0', 'PMP.1')
 
             # If H0 is true
             data.H0 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e,
-                                                  mean.interv = eff.size0, hypoth))
+                                                  mean.interv = eff.size0, hypoth, b))
             colnames(data.H0) <- c('Dcontrol', 'Dintervention', 'BF.01', 'BF.10', 'PMP.0', 'PMP.1')
             
             #Evaluation of condition ----

@@ -46,7 +46,7 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
     while (condition == FALSE) {
         # If H1 is true
         data_crt <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, 
-                                              eff.size, hypoth))
+                                              eff.size, hypoth, b = 1))
         print("Yay data ready!")
         
         # Evaluation of condition----

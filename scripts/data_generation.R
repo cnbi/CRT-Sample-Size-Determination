@@ -1,7 +1,7 @@
 ######################## DATA GENERATION ##############################
 
 gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var.u0, 
-                         var.e = var.e, mean.interv, hypoth) {
+                         var.e = var.e, mean.interv, hypoth, b = b) {
     # Create variables ID  of the cluster and condition
     ID <- rep(1:n2, each = n1)
     condition <- rep(c(0, 1), each = n1 * n2 / 2)
@@ -45,7 +45,7 @@ gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var
         n.eff <- ((n1 * n2) / (1 + (n1 - 1) * rho.data))/2
         output.bain <- bain(estimates, hypothesis = hypoth, 
                             n = c(n.eff, n.eff), group_parameters = 1, Sigma = cov.list, 
-                            joint_parameters = 0)
+                            joint_parameters = 0, fraction = b)
         
         # Results ---------------------------------------------------------------------
         lmer.list[[i]] <- output.lmer
