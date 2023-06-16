@@ -159,8 +159,6 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
 
 #TODO:
 # - Check style with lintR
-# - Think a better name for the condition object.
-# - Run a simulation to know see the performance under various conditions.
 
 
 # Warnings -------------------------------------------------------------------
