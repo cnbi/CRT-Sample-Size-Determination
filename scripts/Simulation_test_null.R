@@ -87,6 +87,8 @@ save(results_all, file = "AllNullResults.Rdata")
 # Plots --------------------------------
 ## Bayes factors --------------------
 #rho and bf.threshold=same
+load("C:\\Users\\barra006\\OneDrive - Universiteit Utrecht\\Documents\\GitHub\\CRT-Sample-Size-Determination\\results\\output\\AllNullResults.Rdata")
+load("AllNullResults.Rdata")
 plots.SSD(1, data = results_all[which(results_all[ , "rho"] == 0.2 & results_all[ , "bf.thresh"] == 3), ], 
           y = med.BF01, grid_x = "n1.final", grid_y = "n2.final",
           title = "Bayes Factor H1 vs H2", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol",
@@ -118,7 +120,7 @@ ggplot(test, aes(y = med.BF10, x = n2.final, color = as.factor(n1), shape = as.f
     labs(title = "Bayes Factor H1 vs H0", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
     xlab("Number of clusters") + ylab("Bayes Factor") +
     scale_y_log10(breaks = 10^(2:13), labels = trans_format("log10", math_format(10^.x)))# This is a problem
-
+#Scale crazy!
 
 ## Eta ---------------------------------
 ggplot(test, aes(y = eta.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
@@ -169,21 +171,21 @@ ggplot(test, aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) 
 ### Final -------------------------------------------------------------------
 ggplot(test[which(test$eff.size == 0.2),], 
        aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) +
-    geom_point() + geom_line() + facet_grid(cols = vars(rho)) +
+    geom_point() + geom_line() + facet_grid(cols = vars(rho), labeller = label_both) +
     labs(title = "Number of clusters in function of clusters' size", 
          subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
     xlab("Clusters' size") + ylab("Number of clusters")
 
 ggplot(test[which(test$eff.size == 0.5),], 
        aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) +
-    geom_point() + geom_line() + facet_grid(cols = vars(rho)) +
+    geom_point() + geom_line() + facet_grid(cols = vars(rho), labeller = label_both) +
     labs(title = "Number of clusters in function of clusters' size", 
          subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
     xlab("Clusters' size") + ylab("Number of clusters")
 
 ggplot(test[which(test$eff.size == 0.8),], 
        aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) +
-    geom_point() + geom_line() + facet_grid(cols = vars(rho)) +
+    geom_point() + geom_line() + facet_grid(cols = vars(rho), labeller = label_both) +
     labs(title = "Number of clusters in function of clusters' size", 
          subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
     xlab("Clusters' size") + ylab("Number of clusters")
