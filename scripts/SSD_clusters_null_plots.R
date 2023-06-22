@@ -21,7 +21,7 @@ SSD_crt_null_plots <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rh
     total.var <- 1
     var.u0 <- rho * total.var
     var.e <- total.var - var.u0
-    iterations <- 1
+    iterations <- 0
     eff.size0 <- 0
     condition <- FALSE #condition fulfillment indicator
     best_result <- FALSE
