@@ -11,14 +11,15 @@ gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var
     mean.ctrl <- 0
     lmer.list <- vector(mode = 'list', length = n.datasets)
     bain.list <- vector(mode = 'list', length = n.datasets)
+    marker <- 0
     
     # Table for results
-    results <- matrix(nrow = n.datasets, ncol = 6)
-    colnames(results) <- c('Dcontrol', 'Dintervention', 'BF.12', 'BF.21', 'PMP.1', 'PMP.2')
+    results <- matrix(nrow = n.datasets, ncol = 7)
+    colnames(results) <- c('Dcontrol', 'Dintervention', 'BF.12', 'BF.21', 'PMP.1', 'PMP.2', 'marker')
 
     # simulation of data 
     for (i in seq(n.datasets)) {
-        # Data generation ----------------------------------------------------------
+     # Data generation ----------------------------------------------------------
         set.seed((i + 90) * i)
         u0 <- rnorm(n2, 0, sqrt(var.u0)) 
         u0 <- rep(u0, each = n1)
@@ -40,6 +41,7 @@ gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var
         var.e.data <- variances[2, 4]
         total.var.data <- var.u0.data + var.e.data
         rho.data <- var.u0.data / total.var.data
+        ifelse(isSingular(output.lmer), marker <- 1, marker <- 0)
         
         # bain ------------------------------------------------------------------------
         n.eff <- ((n1 * n2) / (1 + (n1 - 1) * rho.data))/2
@@ -50,7 +52,7 @@ gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var
         # Results ---------------------------------------------------------------------
         lmer.list[[i]] <- output.lmer
         bain.list[[i]] <- output.bain
-        print(i) #change this
+        print(c(i, n1, n2)) #change this
         #browser()
         results[i, 1] <- output.bain$estimates[2] # Coefficient control
         results[i, 2] <- output.bain$estimates[1] # Coefficient intervention
@@ -58,6 +60,7 @@ gen_CRT_data <- function(n.datasets = n.datasets, n1 = n1, n2 = n2, var.u0 = var
         results[i, 4] <- output.bain$BFmatrix[2, 1] # Bayes factor H2vsH1 or H0vsH1
         results[i, 5] <- output.bain$fit$PMPa[1] #posterior model probabilities of H1.
         results[i, 6] <- output.bain$fit$PMPa[2] #posterior model probabilities of H2 or H0
+        results[i, 7] <- marker
     }
     return(output = results)
 }
