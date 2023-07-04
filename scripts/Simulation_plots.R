@@ -144,6 +144,22 @@ ggplot(results_all, aes(y = eta.BF01, x = n2.after, color = as.factor(n1), shape
     xlab("Number of clusters") + ylab("Proportion of BF > BF threshold") +
     geom_hline(yintercept = 0.8)
 
+
+rho.labs <- c("ICC: 0.05", "ICC: 0.1", "ICC: 0.25")
+names(rho.labs) <- c("0.05", "0.1", "0.25")
+tiff("propBF01.tif", width = 3100, height = 1800, units = "px", res = 300)
+ggplot(results_all[results_all$eff.size == 0.2,], aes(y = eta.BF01, x = n2.after, color = as.factor(n1), shape = as.factor(n1))) +
+    geom_point() + geom_line() +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(cols = vars(rho), labeller = labeller(rho = rho.labs)) +
+    labs(title = "Proportion of Bayes Factors Exceeding the Threshold under the Null Hypothesis", subtitle = "Effect size: 0.2",
+         color = "Cluster sizes", shape = "Cluster sizes") +
+    xlab("Number of clusters") + ylab("Proportion of BF01") +
+    geom_hline(yintercept = 0.8) 
+dev.off()
+
+
+
 ggplot(results_all, aes(y = eta.BF10, x = n2.after, color = as.factor(n1), shape = as.factor(n1))) +
     geom_point() + geom_line() +
     scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
@@ -152,6 +168,16 @@ ggplot(results_all, aes(y = eta.BF10, x = n2.after, color = as.factor(n1), shape
     xlab("Number of clusters") + ylab("Proportion of BF > BF threshold") +
     geom_hline(yintercept = 0.8)
 
+tiff("propBF10.tif", width = 3100, height = 1800, units = "px", res = 300)
+ggplot(results_all[which(results_all$eff.size == 0.2 & results_all$bf.thresh == 3),], aes(y = eta.BF10, x = n2.after, color = as.factor(n1), shape = as.factor(n1))) +
+    geom_point() + geom_line() +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(cols = vars(rho), labeller = labeller(rho = rho.labs)) +
+    labs(title = "Proportion of Bayes Factors Exceeding the Threshold under the Alternative Hypothesis", subtitle = "Effect size: 0.2",
+         color = "Cluster sizes", shape = "Cluster sizes") +
+    xlab("Number of clusters") + ylab("Proportion of BF10") +
+    geom_hline(yintercept = 0.8)# + labs(color = "Cluster sizes", shape = "Cluster sizes")
+dev.off()
 ## PMP ------------------------------------------------------------------------ 
 ggplot(results_all, aes(y = mean.PMP0.H0, x = n2.after, color = as.factor(n1), shape = as.factor(n1))) +
     geom_point() + geom_line() +

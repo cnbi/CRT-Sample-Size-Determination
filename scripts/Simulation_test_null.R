@@ -97,7 +97,7 @@ plots.SSD(1, data = results_null_all, y = med.BF10, grid_x = n1, grid_y = n2,
           title = "Bayes Factor H1 vs H2", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol",
           x_lab = "Bayes Factor", y_lab = "Frequency", color = eff.size)
 test <- results_all[which(results_all$bf.thresh == 3 & results_all$b == 1), ]
-ggplot(test, aes(med.BF01, color = as.factor(n1), fill = as.factor(n1))) +
+ggplot(results_all, aes(med.BF01, color = as.factor(n1), fill = as.factor(n1))) +
     geom_histogram(alpha = 0.5, bins = 100) +
     scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
     facet_grid(rows = vars(rho), cols = vars(eff.size), labeller = label_both) +
@@ -106,14 +106,14 @@ ggplot(test, aes(med.BF01, color = as.factor(n1), fill = as.factor(n1))) +
     #scale_y_log10(breaks = 10^(2:13), labels = trans_format("log10", math_format(10^.x)))
 
 ##Final n2
-ggplot(test, aes(y = med.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
+ggplot(results_all, aes(y = med.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(b))) +
     geom_point() + geom_line() +
     scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
     facet_grid(rows = vars(rho), cols = vars(eff.size), labeller = label_both) +
     labs(title = "Bayes Factor H0 vs H1", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
     xlab("Number of clusters") + ylab("Bayes Factor")
 
-ggplot(test, aes(y = med.BF10, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
+ggplot(results_all, aes(y = med.BF10, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
     geom_point() + geom_line() +
     scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
     facet_grid(rows = vars(rho), cols = vars(eff.size), labeller = label_both) +
@@ -160,7 +160,7 @@ plots.SSD(2, data = results_all, x = n1, y = n2.final, grid_x = eff.size,
           y_lab = "Number of clusters")
 
 
-ggplot(test, aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) +
+ggplot(results_all, aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) +
     geom_point() + geom_line() +
     facet_grid(rows = vars(rho), cols = vars(eff.size), labeller = label_both) +
     labs(title = "Numer of clusters in function of clusters' size", 
@@ -169,21 +169,43 @@ ggplot(test, aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) 
 
 
 ### Final -------------------------------------------------------------------
-ggplot(test[which(test$eff.size == 0.2),], 
+
+rho.labs <- c("ICC: 0.05", "ICC: 0.1", "ICC: 0.25")
+names(rho.labs) <- c("0.05", "0.1", "0.25")
+samples <- ggplot(results_all[which(results_all$eff.size == 0.2), ], 
+       aes(y = n2.final, x = n1, color = factor(bf.thresh), shape = factor(bf.thresh))) +
+    geom_point() + geom_line() +  scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2") + 
+    facet_grid(cols = vars(rho), labeller = labeller(rho = rho.labs)) +
+    labs(title = "Determining Number of Clusters in Function of Cluster Sizes, Bayes Factor Thresholds, and Intraclass Correlations", 
+         subtitle = "Effect size: 0.2",
+         color = "Threshold", shape = "Threshold") +
+    xlab("Cluster sizes") + ylab("Number of clusters")
+
+ggsave("samples.png", samples, width = 1010, height = 800, dpi = 300, units = "px")
+
+tiff("samples03.tif", width = 3100, height = 2000, units = "px", res = 300)
+ggplot(results_all[which(results_all$eff.size == 0.2), ], 
+       aes(y = n2.final, x = n1, color = factor(bf.thresh), shape = factor(bf.thresh))) +
+    geom_point() + geom_line() +  scale_color_brewer(palette = "Dark2") +
+    scale_fill_brewer(palette = "Dark2") + 
+    facet_grid(cols = vars(rho), labeller = labeller(rho = rho.labs)) +
+    labs(title = "Determining Number of Clusters in Function of Cluster Sizes, Bayes Factor Thresholds, and Intraclass Correlations", 
+         subtitle = "Effect size: 0.2",
+         color = "Threshold", shape = "Threshold") +
+    xlab("Cluster sizes") + ylab("Number of clusters")
+dev.off()
+
+
+
+ggplot(results_all, 
        aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) +
     geom_point() + geom_line() + facet_grid(cols = vars(rho), labeller = label_both) +
     labs(title = "Number of clusters in function of clusters' size", 
          subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
     xlab("Clusters' size") + ylab("Number of clusters")
 
-ggplot(test[which(test$eff.size == 0.5),], 
-       aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) +
-    geom_point() + geom_line() + facet_grid(cols = vars(rho), labeller = label_both) +
-    labs(title = "Number of clusters in function of clusters' size", 
-         subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
-    xlab("Clusters' size") + ylab("Number of clusters")
-
-ggplot(test[which(test$eff.size == 0.8),], 
+ggplot(results_all, 
        aes(y = n2.final, x = n1, color = factor(n2), shape = factor(n2))) +
     geom_point() + geom_line() + facet_grid(cols = vars(rho), labeller = label_both) +
     labs(title = "Number of clusters in function of clusters' size", 
