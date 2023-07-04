@@ -3,17 +3,19 @@
 #'@title Sample Size Determination for Cluster Randomized Trials
 #'@description 
 #'@arguments
-## eff.size: Effect size
-## n.datasets: Number of data sets that the user wants to generate to determine the sample size.
-## var.u0: Between cluster variance.
-## BF.thresh: Threshold to choose.
-## eta: Posterior probability that is expected. 1-eta = Bayesian error probability.
-## plots: Logical argument. If TRUE the function print the plots.
-## hypothesis: The hypothesis that is going to be tested.
+## eff.size: Numeric. Effect size
+## n1: Numeric. Cluster size
+## n2: Numeric. Number of clusters in each treatment condition.
+## n.datasets: Numeric. Number of data sets that the user wants to generate to determine the sample size.
+## rho: Numeric. Intraclass correlation
+## BF.thresh: Numeric. Value of the Bayes factor that is going to be the threshold.
+## eta: Numeric. Probability of exceeding Bayes Factor threshold.
+## fixed: Character. Indicating which sample is fixed (n1 or n2)
+## b.fract: Numeric. Fraction of information used to specify the prior distribution.
 
 
-SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thresh, 
-                    eta = 0.8, fixed = 'n2', b.fract = 3) {
+SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thresh,
+                         eta = 0.8, fixed = 'n2', b.fract = 3) {
     # Libraries ----
     library(lme4)
     library(bain)
@@ -25,20 +27,20 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     
     # Starting values -----
     total.var <- 1
-    var.u0 <- rho * total.var
-    var.e <- total.var - var.u0
+    var.u0 <- rho * total.var       #Between-cluster variance
+    var.e <- total.var - var.u0     #Within-cluster variance
     iterations <- 1
-    eff.size0 <- 0
-    condition <- FALSE #condition fulfillment indicator
-    best_result <- FALSE
+    eff.size0 <- 0                  #Effect size for null hypothesis
+    condition_met <- FALSE          #Indicator of the fulfillment of the power criteria.
+    best_result <- FALSE            #Indicator if we find the optimal value of sample size.
     
     # Binary search start ----
     if (fixed == 'n1') {
-        l <- n2
+        low <- n2                   #lower bound
     } else if (fixed == 'n2') {
-        l <- n1
+        low <- n1                   #lower bound
     }
-    h <- 1000
+    high <- 1000                    #higher bound
     
     #Hypotheses -----
     hypothesis1 <- "Dintervention>Dcontrol"
@@ -50,75 +52,112 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     for (b in seq(b.fract)) {
         while (best_result == FALSE) {
             # If H1 is true
-            data.H1 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, 
+            data.H1 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e,
                                                   mean.interv = eff.size, hypoth, b))
-            colnames(data.H1) <- c('Dcontrol', 'Dintervention', 'BF.01', 'BF.10', 'PMP.0', 'PMP.1')
-
+            colnames(data.H1) <- c('Dcontrol', 'Dintervention', 'BF.01', 'BF.10', 'PMP.0', 'PMP.1', 'marker')
+            marker_H1 <- sum(data.H1[, 'marker'])       #How many matrices were singular
             # If H0 is true
             data.H0 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e,
                                                   mean.interv = eff.size0, hypoth, b))
-            colnames(data.H0) <- c('Dcontrol', 'Dintervention', 'BF.01', 'BF.10', 'PMP.0', 'PMP.1')
-            
+            colnames(data.H0) <- c('Dcontrol', 'Dintervention', 'BF.01', 'BF.10', 'PMP.0', 'PMP.1', 'marker')
+            marker_H0 <- sum(data.H0[, 'marker'])
             #Evaluation of condition ----
             # Proportion
-            prop.BF01 <- length(which(data.H0[, 'BF.01'] > BF.thresh)) / n.datasets 
-            prop.BF10 <- length(which(data.H1[, 'BF.10'] > BF.thresh)) / n.datasets 
+            prop.BF01 <- length(which(data.H0[, 'BF.01'] > BF.thresh)) / n.datasets
+            prop.BF10 <- length(which(data.H1[, 'BF.10'] > BF.thresh)) / n.datasets
             # Evaluation
-            ifelse(prop.BF01 > eta & prop.BF10 > eta, condition <- TRUE, condition <- FALSE)
-            #browser()
+            ifelse(prop.BF01 > eta & prop.BF10 > eta, condition_met <- TRUE, condition_met <- FALSE)
             # Binary search algorithm -----
-            if (condition == FALSE) {
+            if (condition_met == FALSE) {
                 print(c("Using cluster size:", n1, "and number of clusters:", n2,
-                      "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
+                        "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
                 if (fixed == 'n1') {
-                    l <- n2                     #lower bound
-                    h <- h                      #higher bound
-                    n2 <- round((l + h) / 2)    #point in the middle
+                    low <- n2                         #lower bound
+                    high <- high                      #higher bound
+                    n2 <- round(( low + high) / 2)    #point in the middle
                     ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
+                    if (low + n2 == high * 2) {
+                        low <- n2                   #lower bound
+                        n2 <- n2 + 2                #point in the middle
+                        high <- 1000                #higher bound
+                    }
                 } else if (fixed == 'n2') {
-                    l <- n1                     #lower bound
-                    h <- h                      #higher bound
-                    n1 <- round((l + h) / 2)    #point in the middle
+                    low <- n1                        #lower bound
+                    high <- high                     #higher bound
+                    n1 <- round((low + high) / 2)    #point in the middle
+                    if (low + n1 == high * 2) {
+                        low <- n1
+                        n1 <- n1 + 1
+                        high <- 1000
+                    }
                 }
-            } else if (condition == TRUE) {
+            } else if (condition_met == TRUE) {
                 if (fixed == 'n1') {
-                    if (n2 - l == 2) {
-                        best_result == TRUE
-                        break
+                    if (n2 - low == 2) {
+                        if (prop.BF01 - eta > 0.1) {
+                            if (prop.BF10 - eta > 0.1) {
+                                low <- low - 10
+                                high <- n2
+                                n2 <- round((low + high) / 2)    #point in the middle
+                            }
+                        } else {
+                            best_result == TRUE
+                            print("Found it!") # Eliminate later
+                            break
+                        }
+                    } else if (n2 - low == 0) {
+                        if (low + n2 == high * 2) {
+                            best_result == TRUE
+                            print("Found it!") # Eliminate later
+                            break
+                        } else {
+                            low <- 10                         #lower bound
+                            high <- n2                       #higher bound
+                            n2 <- round((low + high) / 2)    #point in the middle
+                            ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
+                            # Include warning here
+                            print("Lowering") # Eliminate later
+                        }
                     } else {
                         print(c("Using cluster size:", n1, "and number of clusters:", n2,
                                 "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
-                        l <- l                      #lower bound
-                        h <- n2                     #higher bound
-                        n2 <- round((l + h) / 2)    #point in the middle
+                        low <- low                       #lower bound
+                        high <- n2                       #higher bound
+                        n2 <- round((low + high) / 2)    #point in the middle
                         ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
                     }
-
                 } else if (fixed == 'n2') {
-                    if (n1 - l == 1) {
-                        best_result == TRUE
-                        break
+                    if (n1 - low == 1) {
+                        if (prop.BF01 - eta > 0.1) {
+                            if (prop.BF10 - eta > 0.1) {
+                                low <- low - 10
+                                high <- n1
+                                n1 <- round((low + high) / 2)    #point in the middle
+                            }
+                        } else {
+                            best_result == TRUE
+                            break
+                        }
+                    } else if (n1 - low == 0) {
+                        if (low + n1 == high * 2) {
+                            best_result == TRUE
+                            break
+                        } else {
+                            # Include warning here
+                            low <- 5                         #lower bound
+                            high <- n1                       #higher bound
+                            n1 <- round((low + high) / 2)    #point in the middle
+                        }
                     } else {
                         print(c("Using cluster size:", n1, "and number of clusters:", n2,
                                 "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
-                        l <- l                      #lower bound
-                        h <- n1                     #higher bound
-                        n1 <- round((l + h) / 2)    #point in the middle
+                        low <- low                       #lower bound
+                        high <- n1                       #higher bound
+                        n1 <- round((low + high) / 2)    #point in the middle
                     }
-
                 }
             }
-            # Output ----
-            # if (condition == FALSE) {
-            #     print(c("Using cluster size: ", n1, "and number of clusters: ", n2, 
-            #           "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
-            #     if (fixed == 'n1') {
-            #         n2 = n2 + 2
-            #     } else if (fixed == 'n2') {
-            #         n1 = n1 + 1
-            #     }
-            # }
-            
+            print(c("low:", low, "n2:", n2, "h:", high, "/b:", b)) # Eliminate later
             iterations <- iterations + 1
             if (n2 == 1000) {
                 break
@@ -132,7 +171,9 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
                            "Proportion.BF10" = prop.BF10,
                            "b.frac" = b,
                            "data.H0" = data.H0,
-                           "data.H1" = data.H1)
+                           "data.H1" = data.H1,
+                           "marker.H0" = marker_H0,
+                           "marker.H1" = marker_H1)
         final_SSD[[b]] <- SSD_object
     }
     
