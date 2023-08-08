@@ -20,6 +20,22 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
     library(bain)
     library(dplyr)
     
+    # Warnings
+    if (is.numeric(c(eff.size, n1, n2, n.datasets, rho, BF.thresh, eta)) == FALSE) stop("The arguments, wtih exception of fixed, must be numeric") 
+    #if (is.numeric(eff.size) == FALSE) stop("The effect size must be numeric")
+    if (eff.size > 1) stop("Effect size must be standardized")
+    #if (is.numeric(n1) == FALSE) stop("Cluster size must be numeric")
+    #if (is.numeric(n2) == FALSE) stop("Number of clusters must be numeric")
+    if (n2 %% 2 > 0) stop("Number of clusters must be even")
+    #if (is.numeric(n.datasets) == FALSE) stop("The number of data sets must be numeric")
+    if (rho > 1) stop("The intraclass correlation must be standardized. Thus it cannot be more than 1")
+    #if (is.numeric(rho) == FALSE) stop("The intraclass correlation must be numeric")
+    #if (is.numeric(BF.thresh) == FALSE) stop("The threshold must be numeric")
+    #if (is.numeric(eta) == FALSE) stop("The probability of exceeding Bayes Factor must be numeric")
+    if (eta > 1) stop("Probability of exceeding Bayes Factor threshold cannot be more than 1")
+    if (is.character(fixed) == FALSE) stop("Can only be a character indicating n1 or n2.")
+    if (fixed %in% c("n1", "n2") == FALSE) stop("Can only be a character indicating n1 or n2.")
+    
     #Functions
     source('data_generation.R')
     
@@ -97,7 +113,7 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
                         n2 <- round((low + high) / 2)    #point in the middle
                         ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
                         print("Lowering") # Eliminate later'
-                        #Include warning here
+                        if (n2 < 30) warning("The number of groups is less than 30. This could lead to problems in convergence and singularity.")
                     }
                 } else {
                     print(c("Using cluster size:", n1, "and number of clusters:", n2,
@@ -119,7 +135,6 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
                         low <- 5                         #lower bound
                         high <- n1                       #higher bound
                         n1 <- round((low + high) / 2)    #point in the middle
-                        #Include warning here
                     }
                 } else {
                     print(c("Using cluster size:", n1, "and number of clusters:", n2,
