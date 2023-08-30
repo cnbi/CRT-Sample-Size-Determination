@@ -79,14 +79,15 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
                                                   mean.interv = eff.size0, hypoth, b))
             colnames(data.H0) <- c('Dcontrol', 'Dintervention', 'BF.01', 'BF.10', 'PMP.0', 'PMP.1', 'marker')
             marker_H0 <- sum(data.H0[, 'marker'])
+            
             #Evaluation of condition ----
             # Proportion
             prop.BF01 <- length(which(data.H0[, 'BF.01'] > BF.thresh)) / n.datasets
             prop.BF10 <- length(which(data.H1[, 'BF.10'] > BF.thresh)) / n.datasets
             # Evaluation
             ifelse(prop.BF01 > eta & prop.BF10 > eta, condition_met <- TRUE, condition_met <- FALSE)
-            # Binary search algorithm -----
             
+            # Binary search algorithm -----
             if (condition_met == FALSE) {
                 print(c("Using cluster size:", n1, "and number of clusters:", n2,
                         "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
@@ -178,7 +179,6 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
                 }
             }
             print(c("low:", low, "n2:", n2, "h:", high, "/b:", b)) # Eliminate later
-            iterations <- iterations + 1
             if (n2 == 1000) {
                 break
             }

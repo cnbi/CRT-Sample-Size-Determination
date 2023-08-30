@@ -65,6 +65,7 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
         # If H1 is true
         data_crt <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, 
                                                eff.size, hypoth, b = 1))
+        colnames(results) <- c('Dcontrol', 'Dintervention', 'BF.12', 'BF.21', 'PMP.1', 'PMP.2', 'marker')
         marker_data <- sum(data_crt[, 'marker'])        #How many matrices were singular
         # Evaluation of condition----
         # Proportion
