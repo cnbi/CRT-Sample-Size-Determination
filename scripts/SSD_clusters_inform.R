@@ -76,7 +76,7 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
         # Binary search algorithm
         if (condition_met == FALSE) {
             print("Using cluster size:", n1, "and number of clusters:", n2,
-                  "prop.BF12: ", prop.BF12, "prop.BF21: ", prop.BF21)
+                  "prop.BF12: ", prop.BF12)
             if (fixed == 'n1') {
                 low <- n2                        #lower bound
                 high <- high                     #higher bound
@@ -118,7 +118,7 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
                     }
                 } else {
                     print(c("Using cluster size:", n1, "and number of clusters:", n2,
-                            "prop.BF12: ", prop.BF12, "prop.BF21: ", prop.BF21))
+                            "prop.BF12: ", prop.BF12))
                     low <- low                       #lower bound
                     high <- n2                       #higher bound
                     n2 <- round((low + high) / 2)    #point in the middle
@@ -139,22 +139,13 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
                     }
                 } else {
                     print(c("Using cluster size:", n1, "and number of clusters:", n2,
-                            "prop.BF12: ", prop.BF12, "prop.BF21: ", prop.BF21))
+                            "prop.BF12: ", prop.BF12))
                     low <- low                       #lower bound
                     high <- n1                       #higher bound
                     n1 <- round((low + high) / 2)    #point in the middle
                 }
             }
         }
-        # #If condition_met == FALSE then increase the sample.
-        # if (condition_met == FALSE) {
-        #     print(c("Using cluster size: ", n1, " and number of clusters: ", n2, " eta:", prop.BF12))
-        #     if (fixed == 'n1') {
-        #         n2 = n2 + 2
-        #     } else if (fixed == 'n2') {
-        #         n1 = n1 + 1
-        #     }
-        # }
         
         # Stop because the number of clusters is crazy, is not plausible
         if (n2 == 1000) {
@@ -166,17 +157,12 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
     SSD_object <- list("n1" = n1,
                        "n2" = n2,
                        "Eta" = prop.BF12,
-                       "data" = data_crt)
+                       "data" = data_crt,
+                       "hypotheses" = list(hypothesis1, hypothesis2),
+                       "BF.threshold" = BF.thresh,
+                       "evaluation" = "Informative")
     
-    title <- "Final sample size"
-    cat(paste("\n", title, "\n", sep = ""))
-    row <- paste(rep("=", nchar(title)), collapse = "")
-    cat(row, "\n")
-    cat("Hypotheses:", "\n")
-    cat("H1:", hypothesis1, "\n")
-    cat("H2:", hypothesis2, "\n")
-    cat("Using cluster size = ", SSD_object$n1, " and number of clusters = ", SSD_object$n2, "\n")
-    cat("P (BF.12 > ", BF.thresh, " | H1) = ", SSD_object$Eta, "\n")
+    print_results(SSD_object)
     return(SSD_object)
     
 }

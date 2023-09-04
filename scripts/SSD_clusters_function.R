@@ -64,7 +64,7 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     hypothesis1 <- "Dintervention>Dcontrol"
     null <- "Dintervention=Dcontrol"
     hypoth <- paste(null, ";", hypothesis1)
-    final_SSD <- vector(mode = "list", length = 3)
+    final_SSD <- vector(mode = "list", length = b.fract)
     
     # Simulation and evaluation of condition  -----
     for (b in seq(b.fract)) {
@@ -196,23 +196,11 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
                            "marker.H1" = marker_H1)
         final_SSD[[b]] <- SSD_object
     }
+    final_SSD[[b.fract + 1]] <- list(null, hypothesis1)
+    final_SSD[[b.fract + 2]] <- BF.thresh
     
     # Final output -----
-    for (b in seq(b.fract)) {
-        title <- "Final sample size"
-        cat(paste("\n", title, "\n", sep = ""))
-        row <- paste(rep("=", nchar(title)), collapse = "")
-        cat(row, "\n")
-        cat("Hypotheses:", "\n")
-        cat("H0:", null, "\n")
-        cat("H1:", hypothesis1, "\n")
-        cat("Using b fraction = ", final_SSD[[b]]$b.frac, 
-            ", cluster size = ", final_SSD[[b]]$n1, 
-            ", and number of clusters = ", final_SSD[[b]]$n2, "\n")
-        cat("P (BF.01 >", BF.thresh, " | H0) = ", final_SSD[[b]]$Proportion.BF01, "\n")
-        cat("P (BF.10 >", BF.thresh, " | H1) = ", final_SSD[[b]]$Proportion.BF10, "\n")
-    }
-    
+    print_results(final_SSD)
     return(final_SSD)
 }
 
