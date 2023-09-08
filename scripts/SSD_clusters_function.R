@@ -37,11 +37,12 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     if (is.character(fixed) == FALSE) stop("Can only be a character indicating n1 or n2.")
     if (fixed %in% c("n1", "n2") == FALSE) stop("Can only be a character indicating n1 or n2.")
     #if (is.numeric(b.fract) == FALSE) stop("The fraction b must be numeric")
-    if (is.integer(b.fract) == FALSE) stop("The fraction of information (b) must be integer")
+    if ((b.fract == round(b.fract)) == FALSE) stop("The fraction of information (b) must be integer")
     
     #Functions ----
     source('data_generation.R')
-    # source('print.null')
+    source("small_functions.R")
+    source("print_results.R")
     
     # Starting values -----
     total.var <- 1
@@ -52,11 +53,12 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     condition_met <- FALSE          #Indicator of the fulfillment of the power criteria.
     best_result <- FALSE            #Indicator if we find the optimal value of sample size.
     
+    
     # Binary search start ----
     if (fixed == 'n1') {
-        low <- n2                   #lower bound
+        low <- 6                   #lower bound
     } else if (fixed == 'n2') {
-        low <- n1                   #lower bound
+        low <- 5                   #lower bound
     }
     high <- 1000                    #higher bound
     
@@ -68,6 +70,10 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     
     # Simulation and evaluation of condition  -----
     for (b in seq(b.fract)) {
+        previous <- 0
+        previous_n2 <- 0
+        previous_high <- 0
+        previous_n1 <- 0
         while (best_result == FALSE) {
             # If H1 is true
             data.H1 <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e,
@@ -86,105 +92,104 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
             prop.BF10 <- length(which(data.H1[, 'BF.10'] > BF.thresh)) / n.datasets
             # Evaluation
             ifelse(prop.BF01 > eta & prop.BF10 > eta, condition_met <- TRUE, condition_met <- FALSE)
+            actual <- min(prop.BF10, prop.BF01)
             
             # Binary search algorithm -----
             if (condition_met == FALSE) {
                 print(c("Using cluster size:", n1, "and number of clusters:", n2,
                         "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
-                if (fixed == 'n1') {
+                if (fixed == 'n1') {                        # We need to increase
+                    # if (actual == previous) {
+                    #     low <- n2
+                    #     high <- previous_n2
+                    #     n2 <- round(( low + high) / 2)    #point in the middle
+                    #     ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
+                    # } else {
+                    #     low <- n2                         #lower bound
+                    #     high <- high                      #higher bound
+                    #     n2 <- round(( low + high) / 2)    #point in the middle
+                    #     ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
+                    # }
                     low <- n2                         #lower bound
                     high <- high                      #higher bound
                     n2 <- round(( low + high) / 2)    #point in the middle
                     ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
-                    if (low + n2 == high * 2) {
-                        low <- n2                   #lower bound
-                        n2 <- n2 + 2                #point in the middle
-                        high <- 1000                #higher bound
-                    }
                 } else if (fixed == 'n2') {
+                    # if (actual == previous) {
+                    #     low <- n1
+                    #     high <- previous_n1
+                    #     n1 <- round((low + high) / 2)
+                    # } else {
+                    #     low <- n1                        #lower bound
+                    #     high <- high                     #higher bound
+                    #     n1 <- round((low + high) / 2)    #point in the middle
+                    # }
                     low <- n1                        #lower bound
                     high <- high                     #higher bound
                     n1 <- round((low + high) / 2)    #point in the middle
-                    if (low + n1 == high * 2) {
-                        low <- n1
-                        n1 <- n1 + 1
-                        high <- 1000
-                    }
                 }
             } else if (condition_met == TRUE) {
+                print(c("Using cluster size:", n1, 
+                        "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10, 
+                        "low: ", low, "n2: ", n2, "high: ", high))
+                previous_high <- high
+                previous_low <- low
                 if (fixed == 'n1') {
-                    if (n2 - low == 2) {
-                        if (prop.BF01 - eta > 0.1) {
-                            if (prop.BF10 - eta > 0.1) {
-                                low <- low - 10
-                                high <- n2
-                                n2 <- round((low + high) / 2)    #point in the middle
-                            }
-                        } else {
+                    if (actual - eta < 0.1) { # If the initial sample size produce a proportion close enough
+                        best_result == TRUE
+                        break
+                    } else if (previous == actual) {
+                        if (n2 - low == 2) {
                             best_result == TRUE
-                            print("Found it!") # Eliminate later
-                            break
-                        }
-                    } else if (n2 - low == 0) {
-                        if (low + n2 == high * 2) {
-                            best_result == TRUE
-                            print("Found it!") # Eliminate later
                             break
                         } else {
-                            low <- 10                         #lower bound
-                            high <- n2                       #higher bound
+                            low <- low
+                            high <- n2
                             n2 <- round((low + high) / 2)    #point in the middle
                             ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
-                            # Include warning here
+                            previous_n2 <- n2
                             if (n2 < 30) warning("The number of groups is less than 30. This could lead to problems in convergence and singularity.")
                             print("Lowering") # Eliminate later
                         }
-                    } else {
-                        print(c("Using cluster size:", n1, "and number of clusters:", n2,
-                                "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
-                        low <- low                       #lower bound
-                        high <- n2                       #higher bound
+                    } else {                  # We need to decrease to find the optimal sample size
+                        low <- low
+                        high <- n2
                         n2 <- round((low + high) / 2)    #point in the middle
                         ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
+                        previous_n2 <- n2
+                        if (n2 < 30) warning("The number of groups is less than 30. This could lead to problems in convergence and singularity.")
+                        print("Lowering") # Eliminate later
                     }
                 } else if (fixed == 'n2') {
-                    if (n1 - low == 1) {
-                        if (prop.BF01 - eta > 0.1) {
-                            if (prop.BF10 - eta > 0.1) {
-                                low <- low - 10
-                                high <- n1
-                                n1 <- round((low + high) / 2)    #point in the middle
-                            }
-                        } else {
-                            best_result == TRUE
-                            break
-                        }
-                    } else if (n1 - low == 0) {
-                        if (low + n1 == high * 2) {
+                    if (actual - eta < 0.1) { # If the initial sample size produce a proportion close enough
+                        best_result == TRUE
+                        break
+                    } else if (actual == previous) { # There is no change because we found the optimal
+                        if (n1 - low == 1) {
                             best_result == TRUE
                             break
                         } else {
-                            
-                            low <- 5                         #lower bound
-                            high <- n1                       #higher bound
+                            low <- low
+                            high <- n1
                             n1 <- round((low + high) / 2)    #point in the middle
+                            previous_n1 <- n1
+                            print("Lowering") # Eliminate later
                         }
                     } else {
-                        print(c("Using cluster size:", n1, "and number of clusters:", n2,
-                                "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
-                        low <- low                       #lower bound
-                        high <- n1                       #higher bound
+                        low <- low
+                        high <- n1
                         n1 <- round((low + high) / 2)    #point in the middle
+                        previous_n1 <- n1
+                        print("Lowering") # Eliminate later
                     }
                 }
             }
-            print(c("low:", low, "n2:", n2, "h:", high, "/b:", b)) # Eliminate later
+            previous <- min(prop.BF10, prop.BF01)
+            print(c("low:", low, "n2:", n2, "h:", high, "b:", b)) # Eliminate later
             if (n2 == 1000) {
                 break
             }
-            
         }
-        
         SSD_object <- list("n1" = n1,
                            "n2" = n2,
                            "Proportion.BF01" = prop.BF01,
@@ -201,8 +206,9 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
     
     # Final output -----
     print_results(final_SSD)
-    return(final_SSD)
+    invisible(final_SSD)
 }
+
 
 
 
@@ -216,53 +222,49 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
 
 # Test -------------------------------------------------------------------------
 # start.time <- Sys.time()
-# nulla <- SSD_crt_null(eff.size = 0.5, n.datasets = 10, rho = 0.1, BF.thresh = 3, fixed = "n1", 
-#              b.fract = 3)
+# nulla <- SSD_crt_null(eff.size = 0.5, n.datasets = 10, rho = 0.1, BF.thresh = 3, fixed = "n1",
+#                       b.fract = 3)
 # end.time <- Sys.time()
 # time.taken <- end.time - start.time
 # time.taken
+# # 
+# start.time <- Sys.time()
+# SSD_crt_null(eff.size = 0.4, n.datasets = 15, rho = 0.05, BF.thresh = 3, fixed = "n1", b.fract = 2) #singularity
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# # 
+# # 
+# start.time <- Sys.time()
+# SSD_crt_null(eff.size = 0.4, n.datasets = 15, rho = 0.01, BF.thresh = 3, fixed = "n1", b.fract = 3)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# # # This is weird, it seems like this needs less number of clusters.
+# # 
+# start.time <- Sys.time()
+# SSD_crt_null(eff.size = 0.4, n.datasets = 15, rho = 0.1, BF.thresh = 4, fixed = "n1", b.fract = 3)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# # 
+# start.time <- Sys.time()
+# try <- SSD_crt_null(eff.size = 0.2, n.datasets = 20, rho = 0.1, BF.thresh = 5,fixed = "n1",
+#                     b.fract = 3)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# # 
+# start.time <- Sys.time()
+# SSD_crt_null(eff.size = 0.2, n.datasets = 20, rho = 0.05, BF.thresh = 3, fixed = "n2", b.fract = 3)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# # Reach maximum value
 # 
 # start.time <- Sys.time()
-# SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.05, BF.thresh = 3, hypothesis = "interv.bigger",
-#         n1.fixed = TRUE, n2.fixed = FALSE) #singularity
+# SSD_crt_null(eff.size = 0.8, n.datasets = 20, rho = 0.1, BF.thresh = 3, fixed = "n2", b.fract = 3)
 # end.time <- Sys.time()
 # time.taken <- end.time - start.time
 # time.taken
-# 
-# 
-# start.time <- Sys.time()
-# SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.01, BF.thresh = 3, hypothesis = "interv.bigger",
-#         n1.fixed = TRUE, n2.fixed = FALSE)
-# end.time <- Sys.time()
-# time.taken <- end.time - start.time
-# time.taken
-# # This is weird, it seems like this needs less number of clusters.
-# 
-# start.time <- Sys.time()
-# SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
-#         n1.fixed = TRUE, n2.fixed = FALSE)
-# end.time <- Sys.time()
-# time.taken <- end.time - start.time
-# time.taken
-# 
-# start.time <- Sys.time()
-# try <- SSD_crt_null(eff.size = 0.2, n.datasets = 20, rho = 0.1, BF.thresh = 3,fixed = "n1", 
-#         b.fract = 3)
-# end.time <- Sys.time()
-# time.taken <- end.time - start.time
-# time.taken
-# 
-# start.time <- Sys.time()
-# SSD_crt(eff.size = 0.2, n.datasets = 20, rho = 0.05, BF.thresh = 3, hypothesis = "interv.bigger",
-#         n1.fixed = TRUE, n2.fixed = FALSE)
-# end.time <- Sys.time()
-# time.taken <- end.time - start.time
-# time.taken
-# 
-# start.time <- Sys.time()
-# SSD_crt(eff.size = 0.8, n.datasets = 20, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
-#         n1.fixed = TRUE, n2.fixed = FALSE)
-# end.time <- Sys.time()
-# time.taken <- end.time - start.time
-# time.taken
-
+# # Again maximum value

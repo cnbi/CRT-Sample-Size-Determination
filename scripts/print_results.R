@@ -13,23 +13,28 @@ print_results <- function(object_result) {
         cat("P (BF.12 > ", object_result[[6]], " | H1) = ", object_result$Eta, "\n")
     } else { # Print for null vs informative
         n_object <- length(object_result)
-        results_matrix <- matrix(NA, nrow = length(object_result) - 2, ncol = 5)
-        results_matrix[, 1] <- seq(length(object_result) - 2)
-        results_matrix[, 2] <- unlist(lapply(object_result, `[[`, 1))
-        results_matrix[, 3] <- unlist(lapply(object_result, `[[`, 2))
-        results_matrix[, 4] <- unlist(lapply(object_result, `[[`, 3))
-        results_matrix[, 5] <- unlist(lapply(object_result, `[[`, 4))
-        rownames(results_matrix) <- c("b", "n1", "n2", paste("P(BF.01 >", object_result[[n_object]], "| H0)", sep = " "), 
+        b_number <- length(object_result) - 2
+        results_matrix <- matrix(NA, nrow = b_number, ncol = 5)
+        results_matrix[, 1] <- seq(b_number)
+        object_result_b <- object_result[1:b_number]
+        results_matrix[, 2] <- round(as.numeric(head(unlist(lapply(object_result_b, `[[`, 1)), b_number)))
+        results_matrix[, 3] <- round(as.numeric(head(unlist(lapply(object_result_b, `[[`, 2)), b_number)))
+        results_matrix[, 4] <- round(as.numeric(head(unlist(lapply(object_result_b, `[[`, 3)), b_number)), 3)
+        results_matrix[, 5] <- round(as.numeric(head(unlist(lapply(object_result_b, `[[`, 4)), b_number)), 3)
+        colnames(results_matrix) <- c("b", "n1", "n2", paste("P(BF.01 >", object_result[[n_object]], "| H0)", sep = " "), 
                                       paste("P(BF.10 >", object_result[[n_object]], "| H1)", sep = " "))
         
         cat("Hypotheses:", "\n")
-        cat("    H0:", object_result[[4]][[1]], "\n")
-        cat("    H1:", object_result[[4]][[2]], "\n")
+        cat("    H0:", object_result[[b_number + 1]][[1]], "\n")
+        cat("    H1:", object_result[[b_number + 1]][[2]], "\n")
         
-        cat("******************************", "\n")
+        cat("***********************************************************", "\n")
         print(format(results_matrix, justify = "centre"))
-        cat("\n", "******************************", "\n")
+        cat("***********************************************************", "\n")
         cat("n1: Cluster size", "\n")
-        cat("n2: Number of clusters")
+        cat("n2: Number of clusters", "\n")
     }
 }
+
+# Test
+# print_results(ssd_results_null)
