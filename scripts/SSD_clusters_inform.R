@@ -172,59 +172,54 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
 # - Check style with lintR
 # - Add plots.This could be a function.
 # - Run a simulation to know see the performance under various conditions.
-# - Error messages.(class of variables)
 
-
-# Warnings -------------------------------------------------------------------
-# Check that n2 is even.
-# Check that n1.fixed and n2.fixed are not TRUE both.
 
 # Test -------------------------------------------------------------------------
-start.time <- Sys.time()
-a <- SSD_crt_inform(eff.size = 0.5, n.datasets = 100, rho = 0.1, BF.thresh = 3, fixed = 'n1')
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-
-start.time <- Sys.time()
-SSD_crt_inform(eff.size = 0.4, n.datasets = 15, rho = 0.05, BF.thresh = 3, fixed = "n1") #singularity
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-
-
-start.time <- Sys.time()
-SSD_crt_inform(eff.size = 0.4, n.datasets = 15, rho = 0.01, BF.thresh = 6, fixed = "n1")
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-# This is weird, it seems like this needs less number of clusters.
-
-start.time <- Sys.time()
-SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
-        n1.fixed = TRUE, n2.fixed = FALSE)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-
-start.time <- Sys.time()
-SSD_crt(eff.size = 0.2, n.datasets = 20, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
-        n1.fixed = TRUE, n2.fixed = FALSE)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-
-start.time <- Sys.time()
-SSD_crt(eff.size = 0.2, n.datasets = 20, rho = 0.05, BF.thresh = 3, hypothesis = "interv.bigger",
-        n1.fixed = TRUE, n2.fixed = FALSE)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-
-start.time <- Sys.time()
-SSD_crt(eff.size = 0.8, n.datasets = 20, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
-        n1.fixed = TRUE, n2.fixed = FALSE)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
-
+# start.time <- Sys.time()
+# a <- SSD_crt_inform(eff.size = 0.5, n.datasets = 100, rho = 0.1, BF.thresh = 3, fixed = 'n1')
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# 
+# start.time <- Sys.time()
+# SSD_crt_inform(eff.size = 0.4, n.datasets = 15, rho = 0.05, BF.thresh = 3, fixed = "n1") #singularity
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# 
+# 
+# start.time <- Sys.time()
+# SSD_crt_inform(eff.size = 0.4, n.datasets = 15, rho = 0.01, BF.thresh = 6, fixed = "n1")
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# # This is weird, it seems like this needs less number of clusters.
+# 
+# start.time <- Sys.time()
+# SSD_crt(eff.size = 0.4, n.datasets = 15, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
+#         n1.fixed = TRUE, n2.fixed = FALSE)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# 
+# start.time <- Sys.time()
+# SSD_crt(eff.size = 0.2, n.datasets = 20, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
+#         n1.fixed = TRUE, n2.fixed = FALSE)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# 
+# start.time <- Sys.time()
+# SSD_crt(eff.size = 0.2, n.datasets = 20, rho = 0.05, BF.thresh = 3, hypothesis = "interv.bigger",
+#         n1.fixed = TRUE, n2.fixed = FALSE)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# 
+# start.time <- Sys.time()
+# SSD_crt(eff.size = 0.8, n.datasets = 20, rho = 0.1, BF.thresh = 3, hypothesis = "interv.bigger",
+#         n1.fixed = TRUE, n2.fixed = FALSE)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
+# 

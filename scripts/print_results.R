@@ -28,10 +28,10 @@ print_results <- function(object_result) {
         cat("    H0:", object_result[[b_number + 1]][[1]], "\n")
         cat("    H1:", object_result[[b_number + 1]][[2]], "\n")
         
-        cat("***********************************************************", "\n")
+        cat("***********************************************************************", "\n")
         print(format(results_matrix, justify = "centre"))
-        cat("***********************************************************", "\n")
-        cat("n1: Cluster size", "\n")
+        cat("***********************************************************************", "\n")
+        cat("n1: Cluster sizes", "\n")
         cat("n2: Number of clusters", "\n")
     }
 }

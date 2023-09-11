@@ -188,6 +188,8 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
             print(c("low:", low, "n2:", n2, "h:", high, "b:", b)) # Eliminate later
             if (n2 == 1000) {
                 break
+            } else if (n1 == 1000) {
+                break 
             }
         }
         SSD_object <- list("n1" = n1,
@@ -247,7 +249,7 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
 # end.time <- Sys.time()
 # time.taken <- end.time - start.time
 # time.taken
-# # 
+#
 # start.time <- Sys.time()
 # try <- SSD_crt_null(eff.size = 0.2, n.datasets = 20, rho = 0.1, BF.thresh = 5,fixed = "n1",
 #                     b.fract = 3)
