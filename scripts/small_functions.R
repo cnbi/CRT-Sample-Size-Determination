@@ -1,0 +1,26 @@
+###### SMALL FUNCTIONS #####
+
+# Fit lmer
+fit_lmer <- function(x){
+    fitted_model <- lmer(resp ~ Dintervention + Dcontrol - 1 + (1 | ID), data = x)
+    return(fitted_model)
+}
+
+# Obtain the variance covariance matrix
+varcov <- function(output.lmer, number) {
+    varcov <- matrix(vcov(output.lmer)[number], nrow = 1, ncol = 1)
+    return(varcov)
+}
+
+# Obtain variances
+get_variances <- function(output.lmer, row) {
+    variances <- as.data.frame(VarCorr(output.lmer))
+    value <- variances[row, 4]
+    return(value)
+}
+
+# Marking singular matrices
+marker_func <- function(output.lmer) {
+    ifelse(isSingular(output.lmer), marker <- 1, marker <- 0)
+}
+

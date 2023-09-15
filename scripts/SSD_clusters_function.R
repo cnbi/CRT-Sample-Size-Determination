@@ -98,7 +98,7 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
             if (condition_met == FALSE) {
                 print(c("Using cluster size:", n1, "and number of clusters:", n2,
                         "prop.BF01: ", prop.BF01, "prop.BF10: ", prop.BF10))
-                if (fixed == 'n1') {                        # We need to increase
+                if (fixed == 'n1') {                        # We need to increase the sample size
                     # if (actual == previous) {
                     #     low <- n2
                     #     high <- previous_n2
@@ -114,7 +114,7 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
                     high <- high                      #higher bound
                     n2 <- round(( low + high) / 2)    #point in the middle
                     ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
-                } else if (fixed == 'n2') {
+                } else if (fixed == 'n2') { # We need to increase the sample size
                     # if (actual == previous) {
                     #     low <- n1
                     #     high <- previous_n1
@@ -138,16 +138,16 @@ SSD_crt_null <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.
                     if (actual - eta < 0.1) { # If the initial sample size produce a proportion close enough
                         best_result == TRUE
                         break
-                    } else if (previous == actual) {
-                        if (n2 - low == 2) {
+                    } else if (previous == actual) { #If there is no change in the proportion and the lower
+                        if (n2 - low == 2) {         #boundary is close to the middle point.
                             best_result == TRUE
                             break
-                        } else {
+                        } else {  
+                            previous_n2 <- n2
                             low <- low
                             high <- n2
                             n2 <- round((low + high) / 2)    #point in the middle
                             ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
-                            previous_n2 <- n2
                             if (n2 < 30) warning("The number of groups is less than 30. This could lead to problems in convergence and singularity.")
                             print("Lowering") # Eliminate later
                         }

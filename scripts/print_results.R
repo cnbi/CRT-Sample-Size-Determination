@@ -5,7 +5,7 @@ print_results <- function(object_result) {
     cat(paste("\n", title, "\n", sep = ""))
     row <- paste(rep("=", nchar(title)), collapse = "")
     cat(row, "\n")
-    if (object_result[[length(object_result)]] == "Informative") {   # Print for informative hypotheses
+    if (object_result[[length(object_result)]] == "Inequalities") {   # Print for informative hypotheses
         cat("Hypotheses:", "\n")
         cat("    H1:", object_result[[5]][[1]], "\n")
         cat("    H2:", object_result[[5]][[2]], "\n")

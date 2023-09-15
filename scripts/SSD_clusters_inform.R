@@ -160,7 +160,7 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
                        "data" = data_crt,
                        "hypotheses" = list(hypothesis1, hypothesis2),
                        "BF.threshold" = BF.thresh,
-                       "evaluation" = "Informative")
+                       "evaluation" = "Inequalities")
     
     print_results(SSD_object)
     return(SSD_object)
