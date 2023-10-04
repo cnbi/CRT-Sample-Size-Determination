@@ -2,7 +2,7 @@
 
 # Fit lmer
 fit_lmer <- function(x){
-    fitted_model <- lmer(resp ~ Dintervention + Dcontrol - 1 + (1 | ID), data = x)
+    fitted_model <- lmer(resp ~ intervention + control - 1 + (1 | id), data = x)
     return(fitted_model)
 }
 
@@ -24,3 +24,8 @@ marker_func <- function(output.lmer) {
     ifelse(isSingular(output.lmer), marker <- 1, marker <- 0)
 }
 
+# Extract results
+extract_res <- function(x, number){
+    results <- x[[number]]
+    return(results)
+}

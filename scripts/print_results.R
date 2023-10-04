@@ -11,7 +11,7 @@ print_results <- function(object_result) {
         cat("    H2:", object_result[[5]][[2]], "\n")
         cat("Using cluster size = ", object_result$n1, " and number of clusters = ", object_result$n2, "\n")
         cat("P (BF.12 > ", object_result[[6]], " | H1) = ", object_result$Eta, "\n")
-    } else { # Print for null vs informative
+    } else {                                                         # Print for null vs informative
         n_object <- length(object_result)
         b_number <- length(object_result) - 2
         results_matrix <- matrix(NA, nrow = b_number, ncol = 5)
