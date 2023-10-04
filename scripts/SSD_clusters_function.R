@@ -183,12 +183,12 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
 
 
 # Test -------------------------------------------------------------------------
-start.time <- Sys.time()
-nulla <- SSD_crt_null(eff_size = 0.5, ndatasets = 10, rho = 0.1, BF_thresh = 3, fixed = "n1",
-                      b_fract = 3)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
+# start.time <- Sys.time()
+# nulla <- SSD_crt_null(eff_size = 0.5, ndatasets = 10, rho = 0.1, BF_thresh = 3, fixed = "n1",
+#                       b_fract = 3)
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
 # # 
 # start.time <- Sys.time()
 # SSD_crt_null(eff_size = 0.4, ndatasets = 15, rho = 0.05, BF_thresh = 3, fixed = "n1", b_fract = 2) #singularity
