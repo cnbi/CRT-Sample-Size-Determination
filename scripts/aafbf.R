@@ -28,13 +28,12 @@ calc_aafbf <- function(type, estimates, sigma, b, n_eff) {
         #Calculation of PMPs
         pmp1 <- AAFBF1u/(AAFBF1u + AAFBF2u)
         pmp2 <- 1 - pmp1
-        # browser()
         output <- list(bf.12 = AAFBF12, bf.21 = AAFBF21, pmp1 = pmp1, pmp2 = pmp2)
     } else if (type == "equality") {   # Check the order for this
-        b <- 1/n_eff                   # b fraction according to minimal training sample (b=(J+1)/N)
+        b_calc <- b * 1/n_eff                   # Calculate b
         # complexities
-        comp0 <- dnorm(0, mean = 0, sd = sqrt(sigma[[1]]/b))     # overlap of parameter under H0 and unconstrained prior -> density of the prior under Hu at the focal point 0
-        comp1 <- pnorm(0, mean = 0, sd = sqrt(sigma[[2]]/b))         # always .5 for H1
+        comp0 <- dnorm(0, mean = 0, sd = sqrt(sigma[[1]]/b_calc))     # overlap of parameter under H0 and unconstrained prior -> density of the prior under Hu at the focal point 0
+        comp1 <- 1 - pnorm(0, mean = 0, sd = sqrt(sigma[[2]]/b_calc))
         
         # Fit
         fit0 <- dnorm(0, mean = estimates[[1]], sd = sqrt(sigma[[1]])) # overlap of parameter under H0 and posterior -> density of the posterior at focal point 0

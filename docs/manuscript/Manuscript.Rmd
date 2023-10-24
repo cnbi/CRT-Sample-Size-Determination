@@ -1,0 +1,199 @@
+---
+title: "Draft"
+author: "Camila N. Barragán Ibáñez"
+date: "2023-10-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\section{Introduction}
+The replication crisis is a well established issue in which published findings fail to be replicated. This crisis extends beyond psychology, affecting fields such as health science and biology. Several contributing factors to this problem include publication bias, p-hacking, and underpowered studies. The replication crisis can be linked to underpowered studies because the replicability of a study is related to the statistical power of its design \parencite{oakesStatisticalInferenceCommentary1987}. Low power of a study affects not only its replicability but also reduces the probability of detecting effects that have clinical importance. Furthermore, it may be unethical to involve participants when studies fail to detect existing effects. To ensure that the research has a sufficient power, researchers can employ \emph{a priori} power analysis, which also yields the required number of participants to detect the expected effect size, provided it exists in the population. Moreover, a power analysis can avoid the use of more subjects than necessary, thereby reducing a waste of resources and unethical participant recruitment. 
+
+The calculation of the sample size is determined by numerous elements, depending on the statistical model and the hypothesis testing framework.  Sample size determination in multilevel models is specially complex due to the hierarchical structure of data. Multilevel data are generally found in cluster randomised trials (CRT), which are widely used in social, behavioural, and biomedical sciences to test treatments, programmes, or interventions \parencite{ eldridgePracticalGuideCluster2012, campbellHowDesignAnalyse2014, hayesClusterRandomisedTrials2017}. In this design, complete groups, such as schools or families, are randomly assigned to treatment conditions. Considering the hierarchical structure in which subjects are nested within clusters, the researcher must determine the sample size for both levels: cluster sizes and number of clusters.  
+
+The traditional hypothesis testing framework is the null hypothesis significance test (NHST), initially proposed by Neyman and Pearson. NHST involves testing two hypotheses: the null hypothesis, signifying the absence of an effect, and the alternative hypothesis, denoting the presence of an effect. Several factors have been shown to determine the sample size in CRT: intraclass correlation, effect size, Type I error, cluster size, and number of clusters \parencite{moerbeekPowerAnalysisTrials2016}. 
+
+An alternative approach to hypothesis testing is based on using Bayes factors. The Bayes factor is a quantification of the relative support of the data for one hypothesis over another \parencite{ohaganFractionalBayesFactors1995, heckReviewApplicationsBayes2022}. Bayesian sample size determination generally takes into account a user-specified minimum value of the Bayes factor and the effect sizes. The criteria for sample size determination using Bayes factors are diverse; readers can find an overview in \cite{gelfandSimulationbasedApproachBayesian2002}.  However, research on sample size determination with Bayes factors in CRT is limited. A previous study proposed a method to calculate the total sample size using Monte Carlo simulations \parencite{wilsonBayesianDesignAnalysis2022}, but this method is limited to the total number of participants and ignores the number of clusters. 
+
+This study aims to present a method for determining sample size in cluster randomised trials that use the Bayesian approach to hypothesis testing. Sample size determination relies on simulation studies, for which we wrote functions in R that can either determine the required number of clusters given a fixed cluster size, or vice versa, the cluster size that is required for a fixed number of clusters. The next section introduces the data generation model. Subsequently, we discuss the shortcomings of NHST and the advantages of using Bayes factors. We then delve into the details of the determination of the sample size for CRT, explaining each essential ingredient for sample size determination and the underlying algorithm. Subsequently, we present the results of a simulation designed to assess the function's performance and the impact of elements previously shown to affect CRT sample sizes.
+
+\section{Cluster Randomised Trials} \label{CRT}
+The data from a CRT have a so-called multilevel structure, with variables measured on individuals at the first level and variables measured on clusters at the second level \parencite{ eldridgePracticalGuideCluster2012, campbellHowDesignAnalyse2014, hayesClusterRandomisedTrials2017}. An example of this design is the study by \textcite{ausemsShortTermEffectsRandomized2002}, in which the objective was to test the effectiveness of three types of smoking prevention intervention. In this study, elementary schools were randomly assigned to four research conditions: in-school smoking prevention programme, computed-based out-of-school smoking prevention programme, a combined approach (in-school and out-of-school conditions), and a control condition. The students answered a questionnaire twice, once before the intervention and once after the intervention. The researchers expected that the students within the same school would influence each other smoking behaviour, hence the multilevel model was used to account for dependencies in the outcome variables.
+
+Randomization at the cluster level rather than the individual level results in a decrease of statistical power. The reduction in power follows from the dependency in outcome measures. In other words, the CRT does not provide the same amount of information as the individually randomized trial. Despite the drawback, the CRT is widely used for ethical and logistical reasons. An advantage is that the design helps to avoid or reduce contamination of the control condition, which is likely to occur when more than one experimental condition is available within a cluster and the intervention relies on providing new information, procedures, or guidelines to the participants.
+
+In this paper, the continuous outcome $Y_{ij}$, for individual $i$ in cluster $j$ , is a function of the treatment condition:
+
+\begin{equation}
+    Y_{ij}=\mu_CI_{Cj}+\mu_TI_{Tj}+u_j+e_{ij}.
+\end{equation}
+
+The $\mu$ represents the mean of the control condition ($C$) and the treatment condition ($T$). The indicator variable $I_{Cj}$ can take values 0 and 1 and indicates when the cluster $j$ is in the control condition, while $I_{Tj}$ indicates when the cluster $j$ is in the treatment condition. Additionally, two random terms are included, $u_j\sim N(0,\sigma^2_u)$ at the cluster level and $e_{ij}\sim N(0,\sigma^2_e)$ at the individual level, which are assumed to be independent of each other. The sum of the within-cluster variance $\sigma_e^2$ and the between-cluster variance $\sigma_{u}^2$ results in the total variances, denoted as $\sigma^2$. These variances also define the intraclass correlation coefficient (ICC), $\rho=\sigma_{u}^2/(\sigma_e^2 +\sigma_{u}^2)$, which is the proportion of total variance attributable to the second level.
+The standardised treatment effect is defined as
+
+\begin{equation}\label{eq:effect}
+    \delta = \frac{\overline{\mu}_T-\overline{\mu}_C}{\sigma},
+\end{equation}
+
+\noindent where $\sigma$ is the standard deviation of the outcome variable. The variance of the treatment effect is equal to
+
+\begin{equation}\label{eq:variance-effect}
+    \frac{4\sigma^2[1+(n_1-1)\rho]}{n_1n_2}.
+\end{equation}
+
+Here, $n_1$ represents the number of individuals per cluster and $n_2$ represents the number of clusters. 
+
+All of these elements play a crucial role in the estimation of the sample size. The statistical power is symbolised as $1-\beta$, where $\beta$ is the probability of  making a Type II error.  In the context of CRT the statistical power can be defined using equations \ref{eq:effect} and \ref{eq:variance-effect}, which is
+
+\begin{equation}\label{eq:power}
+1-\beta=\frac{\delta}{\sqrt{\frac{4\sigma^2[1+(n_1-1)\rho]}{n_1n_2}}},
+\end{equation}
+
+\noindent it can be seen from this equation that power decreases as $\rho$ increases, especially so when the cluster size is high.  increases. Therefore, the researcher must balance between the cluster sizes and the number of clusters to obtain the minimum sample required to detect an effect of a treatment.
+
+One approach to determinate the sample size is using the design effect, which takes into account the effect of clustering. The total number of subjects is calculated based on the sample size obtained for an individually randomised design $(n_{individual})$, then is inflated by the design effect with the cluster size fixed \parencite{campbellHowDesignAnalyse2014, moerbeekPowerAnalysisTrials2016}. That is
+
+\begin{equation}
+n_{total} = n_{individual} * 1+(n_1-1)\rho.
+\end{equation}
+
+Another approach to determine the sample size considers the factors that influence the power (see equation \ref{eq:power}). \textcite{moerbeekPowerAnalysisTrials2016} presented formulae that describe the relation between power, sample size, effect size, type I error rate and intraclass correlation coefficient on the sample size and calculate the minimum required sample size. When the cluster size is fixed, the necessary sample size is
+
+\begin{equation}
+n_2=4\frac{1+(n_1-1)\rho}{n_1}\left(\frac{z_{1-\alpha}+z_{1-\beta}}{\delta}\right)^2,
+\end{equation}
+
+\noindent where $z$ denotes the percentile from the standard normal distribution. On the other hand, when the number of clusters is fixed, the number of individuals per cluster is given by
+
+\begin{equation}
+n_1=4\frac{1-\rho}{\left(\frac{\delta}{z_{1-\alpha}+z_{1-\beta}}\right)^2n_2-4\rho}.
+\end{equation}
+
+It is important to note that the methods for estimating the sample size discussed here are established for the Null Hypothesis Significance Testing (NHST) framework, which has notable limitations. These limitations will be explored in more detail in the next section.
+
+\section{Hypothesis Testing}
+\subsection{Null Hypothesis Significance Testing} \label{Null hypothesis}
+
+Despite the widespread use of null hypothesis significance testing, critiques of this approach have grown over the past decades. \textcite{hoijtinkTutorialTestingHypotheses2019} provide an extensive account of numerous issues associated with NHST. Part of the critiques in that paper are related to the use of this approach in research. The excessive emphasis on p-values has contributed to publication bias, as studies yielding statistically significant results are more likely to be published. Furthermore, this emphasis on p-values has led some researchers to engage in questionable research practises such as p-hacking, HARking, or cherry-picking, in order to advance in their careers. A second critique is that using a dichotomous decision rule based on $\alpha=0.05$, or another appropriate value, narrows the focus of the investigation to report the rejection or not rejection of the null hypothesis.
+
+One additional point of critique is whether one is really interested in testing the null hypothesis. The null hypothesis indicates that there is zero effect, or in other words, that two groups have exactly the same means on a continuous outcome variable. This is operationalized as $H_0: \mu_1 = \mu_2$, which means that overall the outcome in condition 1 is equal to the outcome in condition 2. However, the likelihood of this scenario in reality is very low, rendering the test practically unnecessary (\cite{guBayesianEvaluationInequality2014}). Additionally, the NHST approach is focused on the null hypothesis, and even it is rejected, the conclusion remains limited to asserting that the effect is not zero; requiring post hoc tests to understand which condition means significantly differ from each other.
+
+\subsection{Beyond Null Hypothesis}
+
+There are different types of hypotheses that can be of interest to researchers, to illustrate  some of those types consider the study presented in section \ref{CRT}, where \textcite{ausemsShortTermEffectsRandomized2002} collected data on three different smoking prevention interventions. An informative hypothesis would show that there in an order between the experimental condition means. For instance, 
+
+\begin{align*}
+    H_1: \mu_{conbined} > \mu_{in} > \mu_{out} > \mu_{control},  
+\end{align*}
+
+
+\noindent where it is expected that the mean of the combination of  in-school and out-of-school smoking prevention programme is larger than the mean of  in-school programme, which is larger than computed-based out-of-school smoking prevention programme, which in turn surpasses the mean of  the control condition. Other informative hypotheses can contain different combinations between the parameters, such as,
+
+\begin{align*}
+        H_2: \mu_{conbined} > \mu_{in}, \mu_{out} > \mu_{control}\\
+H_3: \mu_{conbined} = \mu_{in}, \mu_{out} > \mu_{control}.
+\end{align*}
+
+
+In $H_2$, the expectation is that the combined programme has a mean greater than both programmes in-school and out-of-school, but there is no expectation of the ordering of the means of in-school and out-of-school, and all the programmes have higher means than the control condition. The hypothesis $H_3$ states that the mean of the combined programme is equal to those on in-school and out-of-school programmes, and both of these conditions surpass the mean of control. 
+
+\subsection{Bayes Factor} \label{Bayes factors}
+The Bayes factor is a quantification of the relative support of the data for one hypothesis over another \parencite{heckReviewApplicationsBayes2022}. It is also known as the ratio of two marginal likelihoods \parencite{heckReviewApplicationsBayes2022}. This is represented as
+$$BF_{ii'}=\frac{m(X|H_i)}{m(X|H_{i'})}$$
+
+\noindent When the hypotheses under consideration are a constrained ($H_i$) against the unconstrained ($H_{i'}$), the formulation can be simplified. The constrained hypothesis is nested in the unconstrained hypothesis \parencite{guApproximatedAdjustedFractional2018}. \cite{klugkistInequalityConstrainedAnalysis2005} showed that in this case the formulation of Bayes factor can be simplified to 
+
+\begin{equation}
+    BF_{iu}=\frac{f_i}{c_i},
+\end{equation}
+
+\noindent where $f_i$ represents the relative fit and $c_i$ is the relative complexity of the informative hypothesis ($H_i$) compared to the unconstrained hypothesis ($H_u$). The fit can also be interpreted as the proportion of the posterior distribution that is supported by the informative hypothesis \parencite{hoijtinkTutorialTestingHypotheses2019}. Complexity is the proportion of the prior distribution supported by the informative hypothesis \parencite{hoijtinkTutorialTestingHypotheses2019}.  
+
+The posterior distribution integrates the information in the density of the data and the prior distribution \parencite{guBayesianEvaluationInequality2014}, this is 
+
+\begin{equation}
+    f_i=f(y|\mu)p(\mu)
+\end{equation}
+
+The prior distribution represents the information of the parameters before seeing the data. In the encompassing prior approach, the prior is constructed using a truncation of the unconstrained hypothesis \parencite{guApproximatedAdjustedFractional2018}. According to this approach, the prior specified must meet two characteristics. The first one is that the prior must be neutral and do not favour any hypothesis. Secondly, the prior should be non-informative, which means that the data dominate in the calculation of the Bayes factor \parencite{moerbeekBayesianEvaluationInformative2019}.
+
+Furthermore, the calculation of Bayes factors is realized using the approximated adjusted fractional Bayes factor. The specification of the prior distribution is realized using a fraction of the information in the data is used, this fraction is symbolized as \emph{b}. This prior is also centred around a focal point. Furthermore, due to the large sample theory, the marginal posterior and the fractional prior can be approximated using a normal distribution with mean in the maximum likelihood estimates and a covariance matrix $\sigma$ for the posterior and $\frac{\sigma}{b}$ for the prior. The approximate adjusted fractional Bayes factor is
+
+\begin{equation}
+    AAFBF_{iu} = \frac{\int_{\theta\in\Theta} \pi_u(\theta|X) \,d\theta }{ \int_{\theta\in\Theta} \pi_u^*(\theta|X^b) \,d\theta },
+\end{equation}
+
+\noindent where the numerator is the posterior distribution and the denominator is the fractional prior distribution.
+
+The Bayes factors are easy to interpret. Given that it is a quantification of the support for one hypothesis over the other, the interpretation is how much relative support the data have on the hypothesis over the other. For instance, $BF_{10}=10$ the relative support for hypothesis 1 ($H_1$) is 10 times larger than for hypothesis 0 ($H_0$). In the case that the Bayes factor is 1, then there is no preference between the hypotheses of the study. It is important to note that the Bayes factors can take values from asymptotically 0 to infinite. Initially, Jeffreys proposed a threshold of 3.2 to declare that there is “positive” evidence for one hypothesis. Later, it was proposed by Kass and Raftery more threshold to distinguish between positive, strong and very strong evidence in favour of the hypothesis. Nevertheless, one of the advantages of Bayes factors is that there are no strict thresholds because it is the quantification of the support; for this reason, it is strongly advised to avoid the use of cut-off values for interpretation.
+
+\section{Sample Size Determination for Cluster Randomised Trials with Bayes factors}\label{algorithm}
+
+\cite{fuSampleSizeDetermination2022} proposed a method to determine the sample size using the Bayes factor for hypothesis testing. The sample size is determined by the probability ($\eta$) that the Bayes factors is higher than a threshold ($BF_{thresh}$) given that the hypothesis is true. This is,
+
+\begin{equation}\label{eq:condition}
+    P(BF_{ii'} > BF_{thresh}| H_i) \geq \eta.
+\end{equation}
+
+Both the probability ($\eta$) and the threshold are specified by the researcher taking into account the purpose of the study; in cases where the study is high stake and the aim is to obtain compelling evidence, the threshold and the probability are increased. 
+The method can be used to determine sample size for the comparison of two informative hypotheses. If one of the hypotheses in consideration has only equality restrictions, then it is necessary that the condition be met by both hypotheses, the one with only equality and the one with inequality restrictions. The reason behind this is that the Bayes factor is sensitive to the fraction $b$ for equality constraints \parencite{guApproximatedAdjustedFractional2018}, thus it is important to perform a sensitivity analysis with different values for $b$.  On the other hand, hypotheses with inequality constraints are constants after changing $b$.
+
+For example, a researcher wants to compare the evidence for two informative hypotheses. The researcher chooses that the support of the evidence for one of the hypotheses should be at least 3 times higher than the support for the other one. Moreover, the researcher chooses that the probability to find this support given that the hypothesis is true in the data, is going to be 0.8. Keep in mind that $1-\eta$ is the probability of making an incorrect conclusion. The sample size is determined such that the following is met
+
+\begin{align}
+    P(BF_{12} > 3|H_1) \geq 0.8.
+\end{align}
+
+As mentioned earlier, the CRT have two sample sizes to estimate: cluster sizes and number of clusters. The strategy proposed in this paper consists of fixing one of these to estimate the other. The algorithm can be seen in Figure \ref{fig:algorithm}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{figures/algorithm.png}
+    \caption{Algorithm used in sample size determination for multilevel models when using Bayes factors.}
+    \label{fig:algorithm}
+\end{figure}
+
+The first steps are the generation of data sets and the fitting of the multilevel model with package \verb|lmer|. The estimations resulted in the fitting are used to calculate the Bayes factors and calculate the proportion of cases, that in this scenery is the probability, that the Bayes factor is bigger than the threshold. The algorithm incorporates a binary search to find the optimal sample size. Optimal size is the minimum sample to reach the condition in \ref{eq:condition}. The binary search uses a low and high boundaries to calculate a middle point, this middle point is the sample size used to generate the data. In the case that the condition is not met, the lower bound increases and the middle point is calculated again. If the condition is met, the algorithm decreases the higher bound and the middle point is calculated again. This process is iterative until the optimal sample size is found. To better understand the conditions to declare an optimal sample size, the reader can find in \href{https://github.com/cnbi/CRT-Sample-Size-Determination/}{repository} an explanation. In this repository can be found the package to determine the sample size for informative hypotheses. 
+
+The function \verb|SSD_crt_null| has the purpose of determining the sample size when one of the hypotheses has only equality constraints. Meanwhile, the function \verb | SSD_crt_inform | is intended to determine the sample size when the hypotheses under consideration have inequality constraints. However, the arguments necessary for the functions are almost the same, the only difference is related to the arguments to run the sensitivity analysis. 
+
+The arguments necessary to determine the sample size are the following:
+
+\begin{itemize}
+\item \verb|eff.size| a numeric value corresponding to the standardised mean difference between the treatment and control conditions. 
+\item \verb|n1| is a numeric value that specifies the sizes of the clusters. All the clusters are assumed to have the same sizes. The default value is 15 individuals in each cluster.
+\item \verb|n2| is a numeric value that specifies the total number of clusters, for this reason the value must be even. The default is 30 clusters, 15 in one condition and 15 in the other condition.
+\item \verb|n.datasets| numeric values that indicate how many data sets are created for the informative hypotheses to determine the sample size. The default is 1000.
+\item \verb|rho| is a numeric value that specifies the intraclass correlation and is used to estimate the variance for the error terms $u_j$ and $e_{ij}$.
+\item \verb|BF.thresh| numeric value that specifies the magnitude of the Bayes factor. Indicates how much support should show the data for one of the hypotheses in consideration. The default value is three. 
+\item \verb|eta| numeric value that indicates the probability of finding this Bayes factor given that the hypothesis is true in the data. The default value is 0.8.
+\item \verb|fixed| is a string that specifies which sample size is fixed. When the number of clusters is fixed (\verb|fixed=|“n2”), the function determines the cluster sizes. If the cluster sizes are fixed (\verb|fixed=|“n1”), then the function determines the number of clusters. The default setting is “n2”.
+\end{itemize}
+
+The function \verb|SSD_crt_null| has one additional argument:
+
+\begin{itemize}
+    \item \verb|b.fract| numeric value that specifies the values that take the fraction \emph{b} for the sensitivity analysis. At the beginning of the sensitivity analysis $b=1$ and increases until the value stipulated by the researcher. It is important to note that $b$ only takes integer values. For example, if \verb|b.fract|$=4$, the sample size is determined for four cases, when $b=1$, $b=2$, $b=3$, and $b=4$. By default, \verb|b.fract| is equal to three.
+\end{itemize}
+
+The outputs are different for \verb|SSD_crt_null| and \verb|SSD_crt_inform|. However, for both functions, the output includes the equations in consideration, the sample size required, the sample size that was fixed, and the probabilities that the Bayes factor is higher than the threshold. For  \verb|SSD_crt_null|, the output also incorporates the results for different values of the fraction \emph{b}:
+
+\begin{lstlisting}
+    Final sample size
+    =================
+    Hypotheses:
+        H0: Dintervention=Dcontrol
+        H1: Dintervention>Dcontrol
+    ******************************************************
+    b  n1  n2   P(BF.01>BFthres|H0)   P(BF.10>BFthresh|H1)
+    1
+    2
+    ******************************************************
+    n1: Cluster size.
+    n2: Number of clusters.
+\end{lstlisting}
+
+Furthermore, the output also consists of a list with the same information as well as the data used.

@@ -20,7 +20,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     library(lme4)
     #library(bain)
     library(dplyr)
-
+    
     # Warnings
     if (is.numeric(c(eff_size, n1, n2, ndatasets, rho, BF_thresh, eta, b_fract)) == FALSE) stop("The arguments, wtih exception of fixed, must be numeric")
     if (eff_size > 1) stop("Effect size must be standardized")
@@ -30,13 +30,13 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     if (is.character(fixed) == FALSE) stop("Can only be a character indicating n1 or n2.")
     if (fixed %in% c("n1", "n2") == FALSE) stop("Can only be a character indicating n1 or n2.")
     if ((b_fract == round(b_fract)) == FALSE) stop("The fraction of information (b) must be integer")
-
+    
     #Functions ----------------
     source("data_generation.R")
     source("small_functions.R")
     source("print_results.R")
     source("aafbf.R")
-
+    
     # Starting values ----------------------------------------------------------
     total_var <- 1
     var_u0 <- rho * total_var       #Between-cluster variance
@@ -45,8 +45,8 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     eff_size0 <- 0                  #Effect size for null hypothesis
     condition_met <- FALSE          #Indication we met the power criteria.
     best_result <- FALSE            #Indication that we found the optimal value of sample size.
-
-
+    
+    
     # Binary search start ------------------------------
     if (fixed == "n1") {
         low <- 6                   #lower bound
@@ -54,17 +54,19 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
         low <- 5                   #lower bound
     }
     high <- 1000                    #higher bound
-
+    
     #Hypotheses -----------------------------------------
-    # hypothesis1 <- "Dintervention>Dcontrol"
-    # null <- "Dintervention=Dcontrol"
+    hypothesis1 <- "Intervention>Control"
+    null <- "Intervention=Control"
     # hypoth <- paste(null, ";", hypothesis1)
     
     final_SSD <- vector(mode = "list", length = b_fract)
-
+    
     # Simulation and evaluation of condition  ----------------------------------
     for (b in seq(b_fract)) {
         previous <- 0
+        previous_high <- 0
+        high <- 1000
         while (best_result == FALSE) {
             # If H1 is true
             data_H1 <- do.call(gen_CRT_data, list(ndatasets, n1, n2, var_u0, var_e,
@@ -94,15 +96,27 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     high <- high                      #higher bound
                     n2 <- round((low + high) / 2)     #point in the middle
                     ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
+                    if (low + n2 == high * 2){          #when there is a roof effect
+                        low <- n2
+                        high <- 1000
+                        n2 <- round((low + high) / 2)     #point in the middle
+                    }
                 } else if (fixed == "n2") { # We need to increase the sample size
                     low <- n1                        #lower bound
                     high <- high                     #higher bound
                     n1 <- round((low + high) / 2)    #point in the middle
+                    if (low + n1 == high * 2){         #when there is a roof effect
+                        low <- n1
+                        high <- previous_high
+                        n1 <- round((low + high) / 2)    #point in the middle
+                    }
+                    
                 }
             } else if (condition_met == TRUE) {
                 print(c("Using cluster size:", n1,
                         "prop_BF01: ", prop_BF01, "prop_BF10: ", prop_BF10,
                         "low: ", low, "n2: ", n2, "high: ", high, "b:", b))
+                previous_high <- high
                 if (fixed == "n1") {
                     if (actual - eta < 0.1) { # Proportion is close enough
                         best_result == TRUE
@@ -170,7 +184,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     }
     final_SSD[[b_fract + 1]] <- list(null, hypothesis1)
     final_SSD[[b_fract + 2]] <- BF_thresh
-
+    
     # Final output -----
     print_results(final_SSD)
     invisible(final_SSD)
