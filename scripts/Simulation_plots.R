@@ -6,36 +6,72 @@ library(ggplot2)
 library(scales) # For scales in plots
 
 # Functions --------------------------------------------------------------------
-source("SSD_clusters_null_plots.R")
+source("SSD_clusters_function_pl.R")
 #source("plots_SSD.R")
 
-# Design matrix ----------------------------------------------------------------
-n1 <- c(5, 10, 20, 40)
-n2 <- 30
-rho <- c(0.05, 0.1, 0.25) #Intraclass correlation
-eff.size <- c(0.2, 0.5, 0.8)
-bf.thresh <- 3
-#fix <- c("n1", "n2") #Maybe not
-design.matrix <- expand.grid(n1, n2, rho, eff.size, bf.thresh)
-names(design.matrix) <- c("n1", "n2", "rho", "eff.size", "bf.thresh")
+# Creation of folder for results
+path <- "~/"
+results_folder <- "results"
+dir.create(results_folder)
 
-nrow.design <- nrow(design.matrix)
-b <- 1
-maxim <- 200
+# Design matrix ----------------------------------------------------------------
+rho <- c(0.025, 0.05, 0.1)
+eff_size <- c(0.2, 0.5, 0.8)
+BF_threshold <- c(1, 3, 5)
+b_fract <- 3
+# fixed <- c("n1", "n2")
+# Fixed n1
+n1 <- c(5, 10, 40)
+design_matrixN2 <- expand.grid(rho, eff_size, BF_threshold, n1, fixed <- "n1")
+nrow_designN2 <- nrow(design_matrixN2)
+# timesN2 <- matrix(NA, nrow = nrow_designN2, ncol = 1)
+colnames(design_matrixN2) <- c("rho", "eff_size", "BF_threshold", "n1", "fixed")
+
+#fixed n2
+n2 <- c(30, 60, 90)
+design_matrixN1 <- expand.grid(rho, eff_size, BF_threshold, n2, fixed <- "n2")
+nrow_designN1 <- nrow(design_matrixN1)
+# timesN1 <- matrix(NA, nrow = nrow_designN1, ncol = 1)
+colnames(design_matrixN1) <- c("rho", "eff_size", "BF_threshold", "n1", "fixed")
+
+# ~N1: To determine n1
+# ~N2: To determine n2
 # Loop for every row -----------------------------------------------------------
-for (Row in seq(nrow.design)) {
-    # function
-    ssd_results_null <- SSD_crt_null_plots(eff.size = design.matrix[Row, 4],
-                                     n1 = design.matrix[Row, 1],
-                                     n2 = design.matrix[Row, 2],
-                                     n.datasets = 200,
-                                     rho = design.matrix[Row, 3],
-                                     BF.thresh = design.matrix[Row, 5],
-                                     eta = 0.8, fixed = "n1", b.fract = b)
-    # Save results
-    save(ssd_results_null, file = paste("ResultPlotsRow", Row, ".Rdata", sep = ""))
-    
+# Finding n2 (i.e. fixed n1)
+for (Row in 1:40) {
+  # Start time
+  #start <- Sys.time()
+  # Actual simulation
+  ssd_results <- SSD_crt_null_plots(eff_size = design_matrixN2[Row, 2],
+                                    n1 = design_matrixN2[Row, 4],
+                                    ndatasets = 5000, rho = design_matrixN2[Row, 1],
+                                    BF_thresh = design_matrixN2[Row, 3], eta = 0.8,
+                                    fixed = as.character(design_matrixN2[Row, 5]), b_fract = b_fract)
+  # Save results
+  #timesN2_row <- Sys.time() - start
+  
+  file_name <- file.path(paste0(results_folder, "/ResultsN2Row", Row, ".RDS"))
+  saveRDS(ssd_results, file = file_name)
 }
+
+
+# Finding n2 (i.e. fixed n1)
+for (Row in 1:40) {
+  # Start time
+  # Start time
+  start <- Sys.time()
+  # Actual simulation
+  ssd_results <- SSD_crt_null_plots(eff_size = design_matrixN1[Row, 2],
+                                    n2 = design_matrixN1[Row, 4],
+                                    ndatasets = 5000, rho = design_matrixN1[Row, 1],
+                                    BF_thresh = design_matrixN1[Row, 3], eta = 0.8,
+                                    fixed = design_matrixN1[Row, 5], b_fract = b_fract)
+  # Save results
+  # timesN1_row <- Sys.time() - start
+  file_name <- file.path(paste0(results_folder, "/ResultsN1Row", Row, ".RDS"))
+  saveRDS(ssd_results, file = file_name)
+}
+
 
 # Collect results --------------------------------------------------------------
 
