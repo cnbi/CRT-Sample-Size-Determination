@@ -4,6 +4,8 @@
 library(dplyr)
 library(ggplot2)
 library(scales) # For scales in plots
+library(latex2exp)
+library(plotmath)
 
 # Functions --------------------------------------------------------------------
 source("SSD_clusters_function.R")
@@ -14,63 +16,91 @@ results_folder <- "results"
 dir.create(results_folder)
 
 # Design matrix-----------------------------------------------------------------
-
-rho <- c(0.025, 0.05, 0.1)
+rho <- c(0.025)
+#rho <- c(0.05, 0.1) #Change
 eff_size <- c(0.2, 0.5, 0.8)
 BF_threshold <- c(1, 3, 5)
 b_fract <- 3
 # fixed <- c("n1", "n2")
 # Fixed n1
 n1 <- c(5, 10, 40)
-design_matrixN2 <- expand.grid(rho, eff_size, BF_threshold, n1, fixed <- "n1")
-nrow_designN2 <- nrow(design_matrixN2)
+design_matrixN2.only <- expand.grid(rho, eff_size, BF_threshold, n1, fixed <- "n1")
+colnames(design_matrixN2.only) <- c("rho", "eff_size", "BF_threshold", "n1", "fixed")
+
+nrow_designN2 <- nrow(design_matrixN2.only)
 timesN2 <- matrix(NA, nrow = nrow_designN2, ncol = 1)
-colnames(design_matrixN2) <- c("rho", "eff_size", "BF_threshold", "n1", "fixed")
 
 #fixed n2
 n2 <- c(30, 60, 90)
 design_matrixN1 <- expand.grid(rho, eff_size, BF_threshold, n2, fixed <- "n2")
 nrow_designN1 <- nrow(design_matrixN1)
 timesN1 <- matrix(NA, nrow = nrow_designN1, ncol = 1)
-colnames(nrow_designN1) <- c("rho", "eff_size", "BF_threshold", "n1", "fixed")
+colnames(design_matrixN1) <- c("rho", "eff_size", "BF_threshold", "n2", "fixed")
 
 # ~N1: To determine n1
 # ~N2: To determine n2
 
 # Loop for every row -----------------------------------------------------------
-## Fixed n1
-for (Row in seq(nrow_designN2)) {
-    # Start time
-    start <- Sys.time()
-    # Actual simulation
-    ssd_results <- SSD_crt_null(eff_size = design_matrixN2[Row, 2],
-                                n1 = design_matrixN2[Row, 4],
-                                ndatasets = 5000, rho = design_matrixN2[Row, 1],
-                                BF_thresh = design_matrixN2[Row, 3], eta = 0.8,
-                                fixed = design_matrixN2[Row, 5], b_fract = b_fract)
-    # Save results
-    timesN2[Row] <- Sys.time() - start
-    file_name <- paste0(results_folder, "/ResultsN2Row", Row, ".RDS")
-    saveRDS(ssd_results, file = file_name)
+# design_matrixN2 <- design_matrixN2[10:27, ]
+# sim_find_n2 <- function(Row, design_matrixN2, results_folder, b_fract){
+#   # Start time
+#   start <- Sys.time()
+#   # Actual simulation
+#   ssd_results <- SSD_crt_null_plots(eff_size = design_matrixN2[Row, 2],
+#                                     n1 = design_matrixN2[Row, 4],
+#                                     ndatasets = 5000, rho = design_matrixN2[Row, 1],
+#                                     BF_thresh = design_matrixN2[Row, 3], eta = 0.8,
+#                                     fixed = design_matrixN2[Row, 5], b_fract = b_fract)
+#   # Save results
+#   timesN2_row <- Sys.time() - start
+#   
+#   file_name <- file.path(results_folder, paste0("/ResultsN2Row1-", Row, ".RDS"))
+#   saveRDS(ssd_results, file = file_name)
+#   return(timesN2_row)
+# }
+# clusters <- makeCluster(10)
+# 
+# for (Row in c(10:27)) {
+#   timesN2[Row] <- parLapply(clusters, Row, sim_find_n2, design_matrixN2 = design_matrixN2, results_folder = results_folder, b_fract = b_fract)
+# }
+# stopCluster(clusters)
+# 
+# timesN2 <- unlist(parLapply(clusters, Row = seq_len(nrow_designN2), sim_find_n2, design_matrixN2 = design_matrixN2, b_fract = b_fract))
+# stopCluster(clusters)
+## Fixed n1---------------------------------------------------------------------
+for (Row in 1:9) {
+  # Start time
+  start <- Sys.time()
+  # Actual simulation
+  ssd_results <- SSD_crt_null(eff_size = design_matrixN2[Row, 2],
+                              n1 = design_matrixN2[Row, 4],
+                              ndatasets = 5000, rho = design_matrixN2[Row, 1],
+                              BF_thresh = design_matrixN2[Row, 3], eta = 0.8,
+                              fixed = as.character(design_matrixN2[Row, 5]),
+                              b_fract = b_fract)
+  # Save results
+  timesN2[Row] <- Sys.time() - start
+  file_name <- file.path(results_folder, paste0("/Big_result/ResultsN2Row", Row, ".RDS"))
+  saveRDS(ssd_results, file = file_name)
 }
-timesN2 <- as.data.frame(cbind(design_matrixN2, timesN2))
-saveRDS(timesN2, file = "results/timesN2.RDS")
+timesN2.2 <- as.data.frame(cbind(design_matrixN2, timesN2))
+saveRDS(timesN2, file = "results/timesN2-2.RDS")
 
 
 ## Fixed n2
 for (Row in seq(nrow_designN1)) {
-    # Start time
-    start <- Sys.time()
-    # Actual simulation
-    ssd_results <- SSD_crt_null(eff_size = design_matrixN1[Row, 2],
-                                n2 = design_matrixN1[Row, 4],
-                                ndatasets = 5000, rho = design_matrixN1[Row, 1],
-                                BF_thresh = design_matrixN1[Row, 3], eta = 0.8,
-                                fixed = design_matrixN1[Row, 5], b_fract = b_fract)
-    # Save results
-    timesN1[Row] <- Sys.time() - start
-    file_name <- paste0(results_folder, "/ResultsN1Row", Row, ".RDS")
-    saveRDS(ssd_results, file = file_name)
+  # Start time
+  start <- Sys.time()
+  # Actual simulation
+  ssd_results <- SSD_crt_null(eff_size = design_matrixN1[Row, 2],
+                              n2 = design_matrixN1[Row, 4],
+                              ndatasets = 5000, rho = design_matrixN1[Row, 1],
+                              BF_thresh = design_matrixN1[Row, 3], eta = 0.8,
+                              fixed = design_matrixN1[Row, 5], b_fract = b_fract)
+  # Save results
+  timesN1[Row] <- Sys.time() - start
+  file_name <- paste0(results_folder, "/ResultsN1Row", Row, ".RDS")
+  saveRDS(ssd_results, file = file_name)
 }
 timesN1 <- as.data.frame(cbind(design_matrixN1, timesN1))
 saveRDS(timesN1, file = "results/timesN1.RDS")
@@ -81,60 +111,69 @@ saveRDS(timesN1, file = "results/timesN1.RDS")
 
 # Collect results in a big matrix ----------------------------------------------
 ## Fixed n1
-all_results_N2 <- matrix(NA, ncol = 11, nrow_designN2 * b_fract)
+all_results_N2 <- matrix(NA, ncol = 11, 81 * b_fract)
 row_result <- 1
-for (row_desing in seq(nrow_designN2)) {
-    readRDS(paste0("results/ResultsN1Row", row_desing, ".RDS"))
-    row_result <- row_result
-    for (b in seq(b_fract)) {
-        median.BF01 <- median(ssd_results[[b]][[6]][, "BF.01"])
-        median.BF10 <- median(ssd_results[[b]][[7]][, "BF.10"])
-        mean.PMP0.H0 <- mean(ssd_results[[b]][[6]][, "PMP.0"])
-        mean.PMP1.H0 <- mean(ssd_results[[b]][[6]][, "PMP.1"])
-        mean.PMP0.H1 <- mean(ssd_results[[b]][[7]][, "PMP.0"])
-        mean.PMP1.H1 <- mean(ssd_results[[b]][[7]][, "PMP.1"])
-        n2 <- ssd_results[[b]]$n2
-        eta.BF01 <- ssd_results[[b]]$Proportion.BF01
-        eta.BF10 <- ssd_results[[b]]$Proportion.BF10
-        n1 <- ssd_results[[b]]$n1
-        all_results_N2[row_desing, ] <- c(b, median.BF01, median.BF10, mean.PMP0.H0,
-                                   mean.PMP1.H0, mean.PMP0.H1, mean.PMP1.H1,
-                                   n2, eta.BF01, eta.BF10, n1)
-        row_result <- row_result + 1
-    }
-    
+
+
+id_number <- as.numeric(unlist(strsplit(index_results_wrong, "\n"))) # Fixing my errors
+index_numbers
+# Big_result/
+  
+for (row_desing in index_numbers) {                                        # CHANGE THIS
+  stored_result <- readRDS(paste0("results_SimulationFindN2/Big_result/ResultsN2Row", row_desing, ".RDS"))
+  row_result <- row_result
+  for (b in seq(b_fract)) {
+    median.BF01 <- median(stored_result[[b]][[6]][, "BF.01"])        # 6: data_H0
+    median.BF10 <- median(stored_result[[b]][[7]][, "BF.10"])        # 7: data_H1
+    mean.PMP0.H0 <- mean(stored_result[[b]][[6]][, "PMP.0"])        # 6: data_H0
+    mean.PMP1.H0 <- mean(stored_result[[b]][[6]][, "PMP.1"])        # 6: data_H0
+    mean.PMP0.H1 <- mean(stored_result[[b]][[7]][, "PMP.0"])        # 7: data_H1
+    mean.PMP1.H1 <- mean(stored_result[[b]][[7]][, "PMP.1"])        # 7: data_H1
+    n2 <- stored_result[[b]]$n2
+    eta.BF01 <- stored_result[[b]]$Proportion.BF01
+    eta.BF10 <- stored_result[[b]]$Proportion.BF10
+    n1 <- stored_result[[b]]$n1
+    all_results_N2[row_result, ] <- c(b, median.BF01, median.BF10, mean.PMP0.H0,
+                                      mean.PMP1.H0, mean.PMP0.H1, mean.PMP1.H1,
+                                      n2, eta.BF01, eta.BF10, n1)
+    row_result <- row_result + 1
+  }
+  
 }
-design_matrix_results <- design_matrixN2[rep(1:nrow(design_matrixN2), each = 3), ]
+design_matrix_results <- design_matrixN2.only[rep(1:nrow(design_matrixN2.only), each = 3), ]
+design_matrixN2.wrong2 <- design_matrixN2.wrong[id_number, ]
+design_matrix_results2 <- design_matrixN2.wrong2[rep(1:nrow(design_matrixN2.wrong2), each = 3), ]
+design_matrix_results <- rbind(design_matrix_results, design_matrix_results2)
 all_results_N2 <- as.data.frame(cbind(design_matrix_results, all_results_N2))
-colnames(all_results_N2) <- c(names(design_matrixN2), "median.BF01", "median.BF10",
+colnames(all_results_N2) <- c(names(design_matrixN2), "b", "median.BF01", "median.BF10",
                               "mean.PMP0.H0", "mean.PMP1.H0", "mean.PMP0.H1",
                               "mean.PMP1.H1", "n2.final", "eta.BF01", "eta.BF10",
                               "n1.final")
-saveRDS(all_results_N2, file = "results/all_results_N2.RDS")
+saveRDS(all_results_N2, file = "results_SimulationFindN2/all_results_FindN2.RDS")
 
 ## Fixed n2
 all_results_N1 <- matrix(NA, ncol = 11, nrow_designN1 * b_fract)
 row_result <- 1
 for (row_desing in seq(nrow_designN1)) {
-    readRDS(paste0("results/ResultsN1Row", row_desing, ".RDS"))
-    row_result <- row_result
-    for (b in seq(b_fract)) {
-        median.BF01 <- median(ssd_results[[b]][[6]][, "BF.01"])
-        median.BF10 <- median(ssd_results[[b]][[7]][, "BF.10"])
-        mean.PMP0.H0 <- mean(ssd_results[[b]][[6]][, "PMP.0"])
-        mean.PMP1.H0 <- mean(ssd_results[[b]][[6]][, "PMP.1"])
-        mean.PMP0.H1 <- mean(ssd_results[[b]][[7]][, "PMP.0"])
-        mean.PMP1.H1 <- mean(ssd_results[[b]][[7]][, "PMP.1"])
-        n2 <- ssd_results[[b]]$n2
-        eta.BF01 <- ssd_results[[b]]$Proportion.BF01
-        eta.BF10 <- ssd_results[[b]]$Proportion.BF10
-        n1 <- ssd_results[[b]]$n1
-        all_results_N1[row_desing, ] <- c(b, median.BF01, median.BF10, mean.PMP0.H0,
-                                          mean.PMP1.H0, mean.PMP0.H1, mean.PMP1.H1,
-                                          n2, eta.BF01, eta.BF10, n1)
-        row_result <- row_result + 1
-    }
-    
+  readRDS(paste0("results/ResultsN1Row", row_desing, ".RDS"))
+  row_result <- row_result
+  for (b in seq(b_fract)) {
+    median.BF01 <- median(stored_result[[b]][[6]][, "BF.01"])
+    median.BF10 <- median(stored_result[[b]][[7]][, "BF.10"])
+    mean.PMP0.H0 <- mean(stored_result[[b]][[6]][, "PMP.0"])
+    mean.PMP1.H0 <- mean(stored_result[[b]][[6]][, "PMP.1"])
+    mean.PMP0.H1 <- mean(stored_result[[b]][[7]][, "PMP.0"])
+    mean.PMP1.H1 <- mean(stored_result[[b]][[7]][, "PMP.1"])
+    n2 <- stored_result[[b]]$n2
+    eta.BF01 <- stored_result[[b]]$Proportion.BF01
+    eta.BF10 <- stored_result[[b]]$Proportion.BF10
+    n1 <- stored_result[[b]]$n1
+    all_results_N1[row_desing, ] <- c(b, median.BF01, median.BF10, mean.PMP0.H0,
+                                      mean.PMP1.H0, mean.PMP0.H1, mean.PMP1.H1,
+                                      n2, eta.BF01, eta.BF10, n1)
+    row_result <- row_result + 1
+  }
+  
 }
 design_matrix_results <- design_matrixN1[rep(1:nrow(design_matrixN1), each = 3), ]
 all_results_N1 <- as.data.frame(cbind(design_matrix_results, all_results_N1))
@@ -149,3 +188,65 @@ saveRDS(all_results_N1, file = "results/all_results_N1.RDS")
 # all_results_N2: Results for determining n2
 
 # Plots ------------------------------------------------------------------------
+## Bayes factors --------------------
+#rho and bf.threshold=same
+
+ggplot(all_results_N2, aes(median.BF01, color = as.factor(n1), fill = as.factor(n1))) +
+  geom_histogram(alpha = 0.5, bins = 100) +
+  scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+  facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = label_both) +
+  labs(title = "Bayes Factor H0 vs H1", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
+  xlab("Bayes Factor") + ylab("Frequency") #+ 
+#scale_y_log10(breaks = 10^(2:13), labels = trans_format("log10", math_format(10^.x)))
+
+ggplot(all_results_N2, aes(median.BF10, color = as.factor(n1), fill = as.factor(n1))) +
+  geom_histogram(alpha = 0.5, bins = 100) +
+  scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+  facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = label_both) +
+  labs(title = "Bayes Factor H0 vs H1", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
+  xlab("Bayes Factor") + ylab("Frequency") + 
+  scale_y_log10(breaks = 10^(2:13), labels = trans_format("log10", math_format(10^.x)))
+
+## Plot n2, Bayes factor ------------------------------------------------------------------------------------
+## Change labels
+rho_labs <- c("ICC: 0.025", "ICC: 0.05", "ICC: 0.1")
+names(rho_labs) <- c("0.025", "0.05", "0.1")
+eff_size_labs <- c(paste0("\u03B4 0.2"), paste0("\u03B4 0.5"), paste0("\u03B4 0.8"))
+names(eff_size_labs) <- c("0.2", "0.5", "0.8")
+
+ggplot(all_results_N2[all_results_N2$b == 1, ], aes(y = median.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
+  geom_point() + geom_line() +
+  scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+  facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+  labs(title = "Bayes Factor H0 vs H1", color = "Cluster \nsizes", shape = "Cluster \nsizes") +
+  xlab("Number of clusters") + ylab("Bayes Factor") + theme(legend.position = "bottom")
+
+# Plot n2, Bayes factor comparing different b
+ggplot(all_results_N2, aes(y = median.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
+  geom_point() + geom_line(aes(linetype = as.factor(b))) +
+  scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+  facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = label_both) +
+  labs(title = "Bayes Factor H0 vs H1", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
+  xlab("Number of clusters") + ylab("Bayes Factor")
+
+# Save plot with high resolution
+ggsave(filename = "n2BF", path = "results_SimulationFindN2", device='tiff', dpi=400)
+ggsave(filename = "n2BF", path = "results_SimulationFindN2", width = 1070, height = 650, units = "px", device='png', dpi=400)
+
+
+## Final n2: n2,------------------------------------------------------------------------------
+ggplot(all_results_N2[all_results_N2$b == 1, ], aes(x = n1, y = n2.final, color = as.factor(BF_threshold), shape = as.factor(BF_threshold))) +
+  geom_point() + geom_line() +
+  scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+  facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+  labs(title = "Determining Number of Clusters in Function of Cluster Sizes, Bayes Factor Thresholds, \nEffect sizes,and Intraclass Correlations",  
+       color = "Bayes Factor \nThresholds", shape = "Bayes Factor \nThresholds") +
+  xlab("Cluster sizes") + ylab("Number of clusters") + theme(legend.position = "bottom")
+
+ggplot(all_results_N2, aes(x = n1, y = n2.final, color = as.factor(BF_threshold), shape = as.factor(b))) +
+  geom_point() + geom_line(aes(linetype = as.factor(b))) +
+  scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+  facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+  labs(title = "Determining Number of Clusters in Function of Cluster Sizes, Bayes Factor Thresholds, \nEffect sizes,and Intraclass Correlations",  
+       color = "Bayes Factor \nThresholds", shape = "Fraction b", linetype = "Fraction b") +
+  xlab("Cluster sizes") + ylab("Number of clusters") + theme(legend.position = "bottom")
