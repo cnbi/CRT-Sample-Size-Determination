@@ -5,7 +5,9 @@ library(dplyr)
 library(ggplot2)
 library(scales) # For scales in plots
 library(latex2exp)
-library(plotmath)
+
+library(dplyr) # For formatting the tables
+library(purrr) # For formatting the tables
 
 # Functions --------------------------------------------------------------------
 source("SSD_clusters_function.R")
@@ -16,8 +18,8 @@ results_folder <- "results"
 dir.create(results_folder)
 
 # Design matrix-----------------------------------------------------------------
-rho <- c(0.025)
-#rho <- c(0.05, 0.1) #Change
+# rho <- c()
+rho <- c(0.025, 0.05, 0.1) #Change
 eff_size <- c(0.2, 0.5, 0.8)
 BF_threshold <- c(1, 3, 5)
 b_fract <- 3
@@ -250,3 +252,45 @@ ggplot(all_results_N2, aes(x = n1, y = n2.final, color = as.factor(BF_threshold)
   labs(title = "Determining Number of Clusters in Function of Cluster Sizes, Bayes Factor Thresholds, \nEffect sizes,and Intraclass Correlations",  
        color = "Bayes Factor \nThresholds", shape = "Fraction b", linetype = "Fraction b") +
   xlab("Cluster sizes") + ylab("Number of clusters") + theme(legend.position = "bottom")
+
+# TABLES -------------------------------------------------------------------------------------------------
+## Option 1
+library(xtable)
+table_results <- c("rho", "BF_threshold", "n1", "n2.final", "eta.BF10", "eta.BF01")
+round_col <- c("BF_threshold", "n1", "n2.final")
+results_colnames <- c("ICC", "$BF_{thresh}$", "N1", "N2", "$P(BF_{10}>BF_{thresh})$", "$P(BF_{01}>BF_{thresh})$")
+effect.size0.2 <- all_results_FindN2[which(all_results_FindN2$b == 1 & all_results_FindN2$eff_size == 0.2),table_results]
+effect.size0.2 <- effect.size0.2[order(effect.size0.2$rho, effect.size0.2$BF_threshold, effect.size0.2$n1), ]
+effect.size0.2[, round_col] <- round(effect.size0.2[, round_col], digits = 0)
+colnames(effect.size0.2) <- results_colnames
+decimals <- c(3, 0, 0, 0, 3, 3)
+for (i in 1:length(table_results)) {
+    effect.size0.2[, i] <- formatC(effect.size0.2[, i], format = "f", digits = decimals[i])
+}
+print(xtable(effect.size0.2), include.rownames = FALSE)
+
+effect.size0.5 <- all_results_FindN2[which(all_results_FindN2$b == 1 & all_results_FindN2$eff_size == 0.5),table_results]
+effect.size0.8 <- all_results_FindN2[which(all_results_FindN2$b == 1 & all_results_FindN2$eff_size == 0.8),table_results]
+
+# Option 2
+#rownames(try_tr) <- NULL #To reset the index
+try_tr <- effect.size0.2[rep(1:nrow(effect.size0.2), each = 2), ]
+try_tr[1:nrow(try_tr) %% 2 == 0, ] <- NA
+try_tr <- try_tr[, 1:ncol(effect.size0.2) - 1]
+colnames(try_tr) <- c("ICC", "$BF_{thresh}$", "N1", "N2", "$P(BF_>BF_{thresh})$")
+try_tr[1:nrow(try_tr) %% 2 == 0, "$P(BF_>BF_{thresh})$"] <- effect.size0.2$`$P(BF_{01}>BF_{thresh})$`
+try_tr$scenario <- c("H1", "H0")
+nrow_result <- nrow(try_tr)/3
+results_new_format <- try_tr[1:nrow_result, 2:ncol(try_tr)]
+for (index in 1:2) {
+    new_col <- try_tr[((nrow_result*index) + 1):((nrow_result*index) + nrow_result), c("N2", "$P(BF_>BF_{thresh})$")]
+    browser()
+    results_new_format <- cbind(results_new_format, new_col)
+}
+results_new_format <- results_new_format[, c(1, 2, 5, 3, 4, 6, 7, 8, 9)]
+print(xtable(results_new_format), include.rownames = FALSE)
+
+
+# Find n1
+table_results <- c("rho", "BF_threshold", "n2", "n1.final", "eta.BF10", "eta.BF01")
+effect.size0.2N1 <- all_results_findN1[which(all_results_findN1$b == 1 & all_results_findN1$eff_size == 0.2),table_results]
