@@ -26,10 +26,9 @@ b_fract <- 3
 # fixed <- c("n1", "n2")
 # Fixed n1
 n1 <- c(5, 10, 40)
-design_matrixN2.only <- expand.grid(rho, eff_size, BF_threshold, n1, fixed <- "n1")
+design_matrixN2<- expand.grid(rho, eff_size, BF_threshold, n1, fixed <- "n1")
+nrow_designN2 <- nrow(design_matrixN2)
 colnames(design_matrixN2.only) <- c("rho", "eff_size", "BF_threshold", "n1", "fixed")
-
-nrow_designN2 <- nrow(design_matrixN2.only)
 timesN2 <- matrix(NA, nrow = nrow_designN2, ncol = 1)
 
 #fixed n2
@@ -43,32 +42,6 @@ colnames(design_matrixN1) <- c("rho", "eff_size", "BF_threshold", "n2", "fixed")
 # ~N2: To determine n2
 
 # Loop for every row -----------------------------------------------------------
-# design_matrixN2 <- design_matrixN2[10:27, ]
-# sim_find_n2 <- function(Row, design_matrixN2, results_folder, b_fract){
-#   # Start time
-#   start <- Sys.time()
-#   # Actual simulation
-#   ssd_results <- SSD_crt_null_plots(eff_size = design_matrixN2[Row, 2],
-#                                     n1 = design_matrixN2[Row, 4],
-#                                     ndatasets = 5000, rho = design_matrixN2[Row, 1],
-#                                     BF_thresh = design_matrixN2[Row, 3], eta = 0.8,
-#                                     fixed = design_matrixN2[Row, 5], b_fract = b_fract)
-#   # Save results
-#   timesN2_row <- Sys.time() - start
-#   
-#   file_name <- file.path(results_folder, paste0("/ResultsN2Row1-", Row, ".RDS"))
-#   saveRDS(ssd_results, file = file_name)
-#   return(timesN2_row)
-# }
-# clusters <- makeCluster(10)
-# 
-# for (Row in c(10:27)) {
-#   timesN2[Row] <- parLapply(clusters, Row, sim_find_n2, design_matrixN2 = design_matrixN2, results_folder = results_folder, b_fract = b_fract)
-# }
-# stopCluster(clusters)
-# 
-# timesN2 <- unlist(parLapply(clusters, Row = seq_len(nrow_designN2), sim_find_n2, design_matrixN2 = design_matrixN2, b_fract = b_fract))
-# stopCluster(clusters)
 ## Fixed n1---------------------------------------------------------------------
 for (Row in 1:9) {
   # Start time
@@ -92,37 +65,33 @@ saveRDS(timesN2, file = "results/timesN2-2.RDS")
 ## Fixed n2
 for (Row in seq(nrow_designN1)) {
   # Start time
-  start <- Sys.time()
+  startt <- Sys.time()
   # Actual simulation
   ssd_results <- SSD_crt_null(eff_size = design_matrixN1[Row, 2],
                               n2 = design_matrixN1[Row, 4],
                               ndatasets = 5000, rho = design_matrixN1[Row, 1],
                               BF_thresh = design_matrixN1[Row, 3], eta = 0.8,
                               fixed = design_matrixN1[Row, 5], b_fract = b_fract)
-  # Save results
-  timesN1[Row] <- Sys.time() - start
-  file_name <- paste0(results_folder, "/ResultsN1Row", Row, ".RDS")
-  saveRDS(ssd_results, file = file_name)
+# Save results
+    endd <- Sys.time()
+    
+    file_name <- file.path(paste0(results_folder, "/ResultsN1Row", Row, ".RDS"))
+    saveRDS(ssd_results, file = file_name)
+    # Save running time
+    running_time <- as.numeric(difftime(endd,startt, units = "mins"))
+    saveRDS(running_time, file = file.path(paste0(results_folder, "/timeN1Row", Row, ".RDS")))
 }
-timesN1 <- as.data.frame(cbind(design_matrixN1, timesN1))
-saveRDS(timesN1, file = "results/timesN1.RDS")
-
 # ResultsN1: Results for determining n1
 # ResultsN2: Results for determining n2
-
 
 # Collect results in a big matrix ----------------------------------------------
 ## Fixed n1
 all_results_N2 <- matrix(NA, ncol = 11, 81 * b_fract)
 row_result <- 1
 
-
-id_number <- as.numeric(unlist(strsplit(index_results_wrong, "\n"))) # Fixing my errors
-index_numbers
 # Big_result/
-  
-for (row_desing in index_numbers) {                                        # CHANGE THIS
-  stored_result <- readRDS(paste0("results_SimulationFindN2/Big_result/ResultsN2Row", row_desing, ".RDS"))
+for (row_desing in seq(nrow_designN2)) {                                      
+  stored_result <- readRDS(paste0("results_SimulationFindN2/Big_result/ResultsN2Row", row_desing, ".RDS")) # I am not sure if it's necessary to store the 
   row_result <- row_result
   for (b in seq(b_fract)) {
     median.BF01 <- median(stored_result[[b]][[6]][, "BF.01"])        # 6: data_H0
@@ -142,17 +111,14 @@ for (row_desing in index_numbers) {                                        # CHA
   }
   
 }
-design_matrix_results <- design_matrixN2.only[rep(1:nrow(design_matrixN2.only), each = 3), ]
-design_matrixN2.wrong2 <- design_matrixN2.wrong[id_number, ]
-design_matrix_results2 <- design_matrixN2.wrong2[rep(1:nrow(design_matrixN2.wrong2), each = 3), ]
-design_matrix_results <- rbind(design_matrix_results, design_matrix_results2)
+design_matrix_results <- design_matrixN2[rep(1:nrow(design_matrixN2), each = 3), ]
 all_results_N2 <- as.data.frame(cbind(design_matrix_results, all_results_N2))
-colnames(all_results_N2) <- c(names(design_matrixN2), "b", "median.BF01", "median.BF10",
+colnames(all_results_N2) <- c(names(design_matrixN2), "median.BF01", "median.BF10",
                               "mean.PMP0.H0", "mean.PMP1.H0", "mean.PMP0.H1",
                               "mean.PMP1.H1", "n2.final", "eta.BF01", "eta.BF10",
                               "n1.final")
 saveRDS(all_results_N2, file = "results_SimulationFindN2/all_results_FindN2.RDS")
-
+#Is b missing?
 ## Fixed n2
 all_results_N1 <- matrix(NA, ncol = 11, nrow_designN1 * b_fract)
 row_result <- 1
