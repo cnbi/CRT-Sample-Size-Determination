@@ -15,7 +15,7 @@
 
 
 SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh,
-                         eta = 0.8, fixed = "n2", b_fract = 3) {
+                         eta = 0.8, fixed = "n2", b_fract = 3, max = 1000) {
     # Libraries ----
     library(lme4)
     #library(bain)
@@ -53,7 +53,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     } else if (fixed == "n2") {
         low <- 5                   #lower bound
     }
-    high <- 1000                    #higher bound
+    high <- max                    #higher bound
     
     #Hypotheses -----------------------------------------
     hypothesis1 <- "Intervention>Control"
@@ -66,7 +66,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     for (b in seq(b_fract)) {
         previous <- 0
         previous_high <- 0
-        high <- 1000
+        high <- max
         while (best_result == FALSE) {
             # If H1 is true
             data_H1 <- do.call(gen_CRT_data, list(ndatasets, n1, n2, var_u0, var_e,
@@ -80,6 +80,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                                                   type = "equality"))
             colnames(data_H0) <- c("BF.10", "BF.01",
                                    "PMP.0", "PMP.1")
+          print("Data generation check")
             #Evaluation of condition ----
             # Proportion
             prop_BF01 <- length(which(data_H0[, "BF.01"] > BF_thresh)) / ndatasets
@@ -89,6 +90,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
             actual <- min(prop_BF10, prop_BF01)
             # Binary search algorithm -----
             if (condition_met == FALSE) {
+              rm(data_H0, data_H1)        # ELIMINATE LATER
                 print(c("Using cluster size:", n1, "and number of clusters:", n2,
                         "prop_BF01: ", prop_BF01, "prop_BF10: ", prop_BF10, "b:", b))
                 if (fixed == "n1") {      # We need to increase the sample size
@@ -98,7 +100,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
                     if (low + n2 == high * 2){          #when there is a roof effect
                         low <- n2
-                        high <- 1000
+                        high <- max
                         n2 <- round((low + high) / 2)     #point in the middle
                     }
                 } else if (fixed == "n2") { # We need to increase the sample size
@@ -110,12 +112,12 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         high <- previous_high
                         n1 <- round((low + high) / 2)    #point in the middle
                     }
-                    
                 }
             } else if (condition_met == TRUE) {
                 print(c("Using cluster size:", n1,
+                        "and number of clusters:", n2,
                         "prop_BF01: ", prop_BF01, "prop_BF10: ", prop_BF10,
-                        "low: ", low, "n2: ", n2, "high: ", high, "b:", b))
+                        "low: ", low, "high: ", high, "b:", b))
                 previous_high <- high
                 if (fixed == "n1") {
                     if (actual - eta < 0.1) { # Proportion is close enough
@@ -166,10 +168,10 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                 }
             }
             previous <- min(prop_BF10, prop_BF01)
-            print(c("low:", low, "n2:", n2, "h:", high, "b:", b)) # Eliminate
-            if (n2 == 1000) {
+            print(c("low:", low, "n2:", n2, "n1:", n1, "h:", high, "b:", b)) # Eliminate
+            if (n2 == max) {
                 break
-            } else if (n1 == 1000) {
+            } else if (n1 == max) {
                 break
             }
         }
@@ -181,6 +183,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                            "data_H0" = data_H0,
                            "data_H1" = data_H1)
         final_SSD[[b]] <- SSD_object
+      rm(data_H0, data_H1)
     }
     final_SSD[[b_fract + 1]] <- list(null, hypothesis1)
     final_SSD[[b_fract + 2]] <- BF_thresh
