@@ -197,6 +197,14 @@ ggplot(all_results_N2, aes(y = median.BF01, x = n2.final, color = as.factor(n1),
   labs(title = "Bayes Factor H0 vs H1", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
   xlab("Number of clusters") + ylab("Bayes Factor")
 
+# Plot n2, Eta comparing different b
+ggplot(all_results_N2[all_results$b == 1, ], aes(y = eta.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
+  geom_point() + geom_line(aes(linetype = as.factor(b))) +
+  scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+  facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = label_both) +
+  labs(title = "Bayes Factor H0 vs H1", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
+  xlab("Number of clusters") + ylab("Eta")
+
 # Save plot with high resolution
 ggsave(filename = "n2BF", path = "results_SimulationFindN2", device='tiff', dpi=400)
 ggsave(filename = "n2BF", path = "results_SimulationFindN2", width = 1070, height = 650, units = "px", device='png', dpi=400)
