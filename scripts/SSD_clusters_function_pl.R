@@ -1,7 +1,7 @@
 ########## SSD NULL HYPOTHESIS AND SAVING EACH INCREASE #########################
 
 SSD_crt_null_plots <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh,
-                               eta = 0.8, fixed = "n2", b_fract = 3) {
+                               eta = 0.8, fixed = "n2", b_fract = 3, max == 1000) {
   # Libraries ----
   library(lme4)
   #library(bain)
@@ -39,7 +39,7 @@ SSD_crt_null_plots <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho
   } else if (fixed == "n2") {
     low <- 5                   #lower bound
   }
-  high <- 350                    #higher bound
+  high <- max                    #higher bound
   
   #Hypotheses -----------------------------------------
   hypothesis1 <- "Intervention>Control"
@@ -47,10 +47,10 @@ SSD_crt_null_plots <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho
   # hypoth <- paste(null, ";", hypothesis1)
   
   final_SSD <- vector(mode = "list", length = b_fract + 2)  # 480 = ((high-n2)/2)*b_fract
-  SSD_object <- vector(mode = "list", length = 321)
+  SSD_object <- vector(mode = "list", length = 321)   # CHANGE THIS
   # Simulation and evaluation of condition  ----------------------------------
   for (b in seq(b_fract)) {
-    high <- 350
+    high <- max
     iteration <- 0
     while (n2 < high + 1) {
       # If H1 is true
@@ -99,7 +99,7 @@ SSD_crt_null_plots <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho
       #         ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
       #         if (low + n2 == high * 2){          #when there is a roof effect
       #             low <- n2
-      #             high <- 1000
+      #             high <- max
       #             n2 <- round((low + high) / 2)     #point in the middle
       #         }
       #     } else if (fixed == "n2") { # We need to increase the sample size
