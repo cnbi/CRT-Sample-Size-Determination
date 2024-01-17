@@ -109,7 +109,11 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     n1 <- round((low + high) / 2)    #point in the middle
                     if (low + n1 == high * 2){         #when there is a roof effect
                         low <- n1
-                        high <- previous_high
+                        if (previous_high > 0) {
+                            high <- previous_high
+                        } else {
+                            high <- max
+                        }
                         n1 <- round((low + high) / 2)    #point in the middle
                     }
                 }
