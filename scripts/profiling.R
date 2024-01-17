@@ -32,10 +32,10 @@ profvis(
                                     b_fract = b_fract)
         # Save results
         endd <- Sys.time()
-        file_name <- file.path(path, paste0("profiling_row", Row, ".RDS"))
+        file_name <- file.path(paste0("profiling_row", Row, ".RDS"))
         saveRDS(ssd_results, file = file_name)
         diff.time <- as.numeric(difftime(endd, startt, units = "mins"))
-        time_name <- file.path(path, paste0("profiling_time_row", Row, ".RDS"))
+        time_name <- file.path(paste0("profiling_time_row", Row, ".RDS"))
         saveRDS(diff.time, file = time_name)
     }
 )
@@ -52,9 +52,9 @@ for (Row in seq(nrow_designN1)) {
                                 b_fract = b_fract)
     # Save results
     endd <- Sys.time()
-    file_name <- file.path(path, paste0("profiling_row", Row, ".RDS"))
+    file_name <- file.path(paste0("/profiling_row", Row, ".RDS"))
     saveRDS(ssd_results, file = file_name)
     diff.time <- as.numeric(difftime(endd, startt, units = "mins"))
-    time_name <- file.path(path, paste0("profiling_time_row", Row, ".RDS"))
+    time_name <- file.path(paste0("/profiling_time_row", Row, ".RDS"))
     saveRDS(diff.time, file = time_name)
 }

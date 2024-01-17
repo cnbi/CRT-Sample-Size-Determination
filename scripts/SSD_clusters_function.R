@@ -49,9 +49,11 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     
     # Binary search start ------------------------------
     if (fixed == "n1") {
-        low <- 6                   #lower bound
+        min. <- 6
+        low <- min                   #lower bound
     } else if (fixed == "n2") {
-        low <- 5                   #lower bound
+        min. <- 5
+        low <- min.                   #lower bound
     }
     high <- max                    #higher bound
     
@@ -64,6 +66,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     
     # Simulation and evaluation of condition  ----------------------------------
     for (b in seq(b_fract)) {
+        low <- min.
         previous <- 0
         previous_high <- 0
         high <- max
@@ -80,7 +83,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                                                   type = "equality"))
             colnames(data_H0) <- c("BF.10", "BF.01",
                                    "PMP.0", "PMP.1")
-          print("Data generation check")
+            print("Data generation check")
             #Evaluation of condition ----
             # Proportion
             prop_BF01 <- length(which(data_H0[, "BF.01"] > BF_thresh)) / ndatasets
@@ -90,7 +93,6 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
             actual <- min(prop_BF10, prop_BF01)
             # Binary search algorithm -----
             if (condition_met == FALSE) {
-              rm(data_H0, data_H1)        # ELIMINATE LATER
                 print(c("Using cluster size:", n1, "and number of clusters:", n2,
                         "prop_BF01: ", prop_BF01, "prop_BF10: ", prop_BF10, "b:", b))
                 if (fixed == "n1") {      # We need to increase the sample size

@@ -76,8 +76,6 @@ gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u
     intervention <- condition
     control <- 1 - intervention
     mean_control <- 0
-    lmer_list <- vector(mode = "list", length = ndatasets)
-    bayes_list <- vector(mode = "list", length = ndatasets)
     marker <- 0
     # without_sing <- FALSE
     
@@ -112,7 +110,7 @@ gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u
     var_e_data <- unlist(lapply(output_lmer, get_variances, 2))
     total_var_data <- var_u0_data + var_e_data
     rho_data <- var_u0_data / total_var_data
-  print("Multilevel check")
+    print("Multilevel check")
   
     #Approximated adjusted fractional Bayes factors
     #browser()
@@ -126,9 +124,9 @@ gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u
     results[, 1] <- unlist(lapply(output_AAFBF, extract_res, 1)) # Bayes factor H1vsH2 or H1vsH0
     results[, 2] <- unlist(lapply(output_AAFBF, extract_res, 2)) # Bayes factor H2vsH1 or H0vsH1
     results[, 3] <- unlist(lapply(output_AAFBF, extract_res, 3)) #posterior model probabilities of H2 or H0
-    results[, 4] <- unlist(lapply(output_AAFBF, extract_res, 4)) #posterior model probabilities of H1.
-    rm(id,condition, intervention, control, lmer_list, bayes_list, data.list, output_lmer, u0,
-       e, resp, data, data.list, estimates, cov_intervention, cov_control, cov_list,  var_u0_data, 
+    results[, 4] <- unlist(lapply(output_AAFBF, extract_res, 4)) #posterior model probabilities of H1
+    rm(id,condition, intervention, control, data.list, output_lmer, u0,
+       e, resp, data, estimates, cov_intervention, cov_control, cov_list,  var_u0_data, 
        var_e_data, total_var_data, rho_data, n_eff, output_AAFBF)
     
     return(output = results)
