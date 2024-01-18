@@ -81,7 +81,6 @@ gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u
     
     # Table for results
     results <- matrix(NA, ndatasets, 4)
-    data.list <- vector(mode = "list", length = ndatasets)
     output_lmer <- vector(mode = "list", length = ndatasets)
     
     for (iter in seq(ndatasets)) {
@@ -94,11 +93,10 @@ gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u
         
         #Data frame
         data <- cbind(resp, intervention, control, id)
-        data.list[[iter]] <- as.data.frame(data)
+        # Multilevel analysis ---------------------------------------------------------
+        fitted_model <- lmer(resp ~ intervention + control - 1 + (1 | id), data = data)
+        output_lmer[[iter]] <- fitted_model
     }
-    
-    # Multilevel analysis ---------------------------------------------------------
-    output_lmer <- lapply(data.list, fit_lmer)
     marker <- lapply(output_lmer, marker_func) # Mark singularity
     # ifelse(sum(unlist(marker)) > 0, without_sing <- FALSE, without_sing <- TRUE)
     
