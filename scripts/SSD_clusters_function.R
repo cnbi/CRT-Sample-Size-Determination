@@ -100,7 +100,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     high <- high                      #higher bound
                     n2 <- round((low + high) / 2)     #point in the middle
                     ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
-                    if (low + n2 == high * 2){          #when there is a roof effect
+                    if (low + n2 == high * 2) {          #when there is a roof effect
                         low <- n2
                         high <- max
                         n2 <- round((low + high) / 2)     #point in the middle
@@ -109,7 +109,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     low <- n1                        #lower bound
                     high <- high                     #higher bound
                     n1 <- round((low + high) / 2)    #point in the middle
-                    if (low + n1 == high * 2){         #when there is a roof effect
+                    if (low + n1 == high * 2) {         #when there is a roof effect
                         low <- n1
                         if (previous_high > 0) {
                             high <- previous_high
