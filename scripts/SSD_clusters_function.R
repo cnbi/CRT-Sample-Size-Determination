@@ -139,7 +139,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                             n2 <- round((low + high) / 2)   #point in the middle
                             ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
                             if (n2 < 30) warning("The number of groups is less than 30.
-                                                 This could lead to problems in convergence and singularity.")
+                                                 This may cause problems in convergence and singularity.")
                             print("Lowering") # Eliminate later
                         }
                     } else {       # Decreasing to find the optimal sample size
@@ -148,7 +148,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         n2 <- round((low + high) / 2)    #point in the middle
                         ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
                         if (n2 < 30) warning("The number of groups is less than 30.
-                                             This could lead to problems in convergence and singularity.")
+                                             This may cause problems in convergence and singularity.")
                         print("Lowering") # Eliminate later
                     }
                 } else if (fixed == "n2") {
@@ -189,7 +189,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                            "data_H0" = data_H0,
                            "data_H1" = data_H1)
         final_SSD[[b]] <- SSD_object
-      rm(data_H0, data_H1)
+        rm(data_H0, data_H1)
     }
     final_SSD[[b_fract + 1]] <- list(null, hypothesis1)
     final_SSD[[b_fract + 2]] <- BF_thresh
