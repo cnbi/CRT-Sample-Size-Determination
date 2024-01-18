@@ -1,11 +1,5 @@
 ###### SMALL FUNCTIONS #####
 
-# Fit lmer
-fit_lmer <- function(x){
-    fitted_model <- lmer(resp ~ intervention + control - 1 + (1 | id), data = x)
-    return(fitted_model)
-}
-
 # Obtain the variance covariance matrix
 varcov <- function(output.lmer, number) {
     varcov <- matrix(vcov(output.lmer)[number], nrow = 1, ncol = 1)
