@@ -50,7 +50,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     # Binary search start ------------------------------
     if (fixed == "n1") {
         min. <- 6
-        low <- min                   #lower bound
+        low <- min.                   #lower bound
     } else if (fixed == "n2") {
         min. <- 5
         low <- min.                   #lower bound
