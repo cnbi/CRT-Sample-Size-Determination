@@ -93,6 +93,7 @@ gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u
         
         #Data frame
         data <- cbind(resp, intervention, control, id)
+        data <- as.data.frame(data) # Necessary to use lmer
         # Multilevel analysis ---------------------------------------------------------
         fitted_model <- lmer(resp ~ intervention + control - 1 + (1 | id), data = data)
         output_lmer[[iter]] <- fitted_model
