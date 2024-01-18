@@ -50,7 +50,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     # Binary search start ------------------------------
     if (fixed == "n1") {
         min. <- 6
-        low <- min                   #lower bound
+        low <- min.                   #lower bound
     } else if (fixed == "n2") {
         min. <- 5
         low <- min.                   #lower bound
@@ -100,7 +100,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     high <- high                      #higher bound
                     n2 <- round((low + high) / 2)     #point in the middle
                     ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
-                    if (low + n2 == high * 2){          #when there is a roof effect
+                    if (low + n2 == high * 2) {          #when there is a roof effect
                         low <- n2
                         high <- max
                         n2 <- round((low + high) / 2)     #point in the middle
@@ -109,7 +109,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     low <- n1                        #lower bound
                     high <- high                     #higher bound
                     n1 <- round((low + high) / 2)    #point in the middle
-                    if (low + n1 == high * 2){         #when there is a roof effect
+                    if (low + n1 == high * 2) {         #when there is a roof effect
                         low <- n1
                         if (previous_high > 0) {
                             high <- previous_high
@@ -139,7 +139,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                             n2 <- round((low + high) / 2)   #point in the middle
                             ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
                             if (n2 < 30) warning("The number of groups is less than 30.
-                                                 This could lead to problems in convergence and singularity.")
+                                                 This may cause problems in convergence and singularity.")
                             print("Lowering") # Eliminate later
                         }
                     } else {       # Decreasing to find the optimal sample size
@@ -148,7 +148,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         n2 <- round((low + high) / 2)    #point in the middle
                         ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
                         if (n2 < 30) warning("The number of groups is less than 30.
-                                             This could lead to problems in convergence and singularity.")
+                                             This may cause problems in convergence and singularity.")
                         print("Lowering") # Eliminate later
                     }
                 } else if (fixed == "n2") {
@@ -189,7 +189,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                            "data_H0" = data_H0,
                            "data_H1" = data_H1)
         final_SSD[[b]] <- SSD_object
-      rm(data_H0, data_H1)
+        rm(data_H0, data_H1)
     }
     final_SSD[[b_fract + 1]] <- list(null, hypothesis1)
     final_SSD[[b_fract + 2]] <- BF_thresh
