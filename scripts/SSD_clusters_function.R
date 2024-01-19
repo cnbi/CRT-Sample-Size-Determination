@@ -15,7 +15,7 @@
 
 
 SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh,
-                         eta = 0.8, fixed = "n2", b_fract = 3, max = 1000) {
+                         eta = 0.8, fixed = "n2", b_fract = 3, max = 1000, batch_size = 100) {
     # Libraries ----
     library(lme4)
     #library(bain)
@@ -74,13 +74,13 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
             # If H1 is true
             data_H1 <- do.call(gen_CRT_data, list(ndatasets, n1, n2, var_u0, var_e,
                                                   mean_interv = eff_size, b, 
-                                                  type = "equality"))
+                                                  type = "equality", batch_size = batch_size))
             colnames(data_H1) <- c("BF.10", "BF.01",
                                    "PMP.0", "PMP.1")
             # If H0 is true
             data_H0 <- do.call(gen_CRT_data, list(ndatasets, n1, n2, var_u0, var_e,
                                                   mean_interv = eff_size0, b,
-                                                  type = "equality"))
+                                                  type = "equality", batch_size == batch_size))
             colnames(data_H0) <- c("BF.10", "BF.01",
                                    "PMP.0", "PMP.1")
             print("Data generation check")
