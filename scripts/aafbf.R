@@ -29,7 +29,8 @@ calc_aafbf <- function(type, estimates, sigma, b, n_eff) {
         pmp1 <- AAFBF1u/(AAFBF1u + AAFBF2u)
         pmp2 <- 1 - pmp1
         output <- list(bf.12 = AAFBF12, bf.21 = AAFBF21, pmp1 = pmp1, pmp2 = pmp2)
-    } else if (type == "equality") {   # Check the order for this
+        
+    } else if (type == "equality") {
         b_calc <- b * 1/n_eff                   # Calculate b
         # complexities
         comp0 <- dnorm(0, mean = 0, sd = sqrt(sigma[[1]]/b_calc))     # overlap of parameter under H0 and unconstrained prior -> density of the prior under Hu at the focal point 0
