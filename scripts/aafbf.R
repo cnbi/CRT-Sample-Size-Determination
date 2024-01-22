@@ -42,7 +42,7 @@ calc_aafbf <- function(type, estimates, sigma, b, n_eff) {
         
         # Calculation of BFs
         AAFBF0u <- fit0/comp0                                    # AAFBF of H0 vs Hu
-        AAFBF1u <- fit1/comp1                                        # AAFBF of H0 vs Hu
+        AAFBF1u <- fit1/comp1                                    # AAFBF of H0 vs Hu
         AAFBF01 <- AAFBF0u/AAFBF1u
         AAFBF10 <- 1/AAFBF01
         
