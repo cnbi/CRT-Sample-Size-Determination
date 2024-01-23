@@ -208,7 +208,9 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
             previous_eta <- min(prop_BF10, prop_BF01)
             print(c("low:", low, "n2:", n2, "n1:", n1, "h:", high, "b:", b)) # Eliminate
             
-            I# If the sample size reaches the maximum
+
+            # If the sample size reaches the maximum
+
             if (n2 == max) {
                 break
             } else if (n1 == max) {
