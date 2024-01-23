@@ -32,9 +32,11 @@ gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u
     # Multilevel analysis ---------------------------------------------------------
     # Batches
     batch_size <- batch_size
+
     ifelse((ndatasets/batch_size) %% 1 == 0, num_batches <- ndatasets/batch_size, 
            num_batches <- (ndatasets/batch_size) + 1)
     
+
     for (batch in seq(num_batches)) {
         #Indexes
         start_index <- (batch_size * (batch - 1)) + 1
