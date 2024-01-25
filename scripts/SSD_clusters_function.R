@@ -92,7 +92,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
             prop_BF10 <- length(which(data_H1[, "BF.10"] > BF_thresh)) / ndatasets
             # Evaluation
             ifelse(prop_BF01 > eta & prop_BF10 > eta, condition_met <- TRUE, condition_met <- FALSE)
-            actual_eta <- min(prop_BF10, prop_BF01)
+            current_eta <- min(prop_BF10, prop_BF01)
             # Binary search algorithm ------------------------------------------
             if (condition_met == FALSE) {
                 print(c("Using cluster size:", n1, "and number of clusters:", n2,
@@ -137,36 +137,24 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                 
                 if (fixed == "n1") {
                     # Eta is close enough to the desired eta
-                    if (actual_eta - eta < 0.1) {
-                        if (previous_eta > eta) {
-                            # Decreasing to find the ultimate number of clusters
-                            low <- low                         #lower bound
-                            high <- n2                         #higher bound
-                            n2 <- round((low + high) / 2)      #point in the middle
-                            ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
-                            if (n2 < 30) warning("The number of groups is less than 30.
-                                                 This may cause problems in convergence and singularity.")
-                            print("Lowering") # Eliminate later
-                        }else {
-                            ultimate_sample_size == TRUE
-                            break
-                        }
-                    } else if (previous_eta == actual_eta) {
-                        # If there is no change in eta and the lower bound is close to the middle point
+                    if (current_eta - eta < 0.1) {
                         if (n2 - low == 2) {
                             ultimate_sample_size == TRUE
                             break
-                            
-                        } else {   
-                            # Decreasing to find the ultimate number of clusters
+                        } else {
+                            # Decreasing with small steps to find the ultimate number of clusters
                             low <- low                         #lower bound
-                            high <- n2                         #higher bound
-                            n2 <- round((low + high) / 2)      #point in the middle
+                            n2 <- n2 - 2 
+                            high <- (n2*2) - low
                             ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
                             if (n2 < 30) warning("The number of groups is less than 30.
                                                  This may cause problems in convergence and singularity.")
-                            print("Lowering") # Eliminate later
+                            print("Lowering with baby steps") # Eliminate late
                         }
+                    } else if (previous_eta == current_eta && n2 - low == 2) {
+                        # If there is no change in eta and the lower bound is close to the middle point
+                        ultimate_sample_size == TRUE
+                        break
                     } else {
                         # Decreasing to find the ultimate number of clusters
                         low <- low                         #lower bound
@@ -179,23 +167,23 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     }
                 } else if (fixed == "n2") {
                     # Eta is close enough to the desired eta
-                    if (actual_eta - eta < 0.1) {
-                        ultimate_sample_size == TRUE
-                        break
-                        
-                    } else if (actual_eta == previous_eta) {
-                        # If there is no change in eta and the lower bound is close to the middle point
-                        if (n1 - low == 1) {
+                    if (current_eta - eta < 0.1) {
+                        if (n1 - low == 2) {
                             ultimate_sample_size == TRUE
                             break
-                            
                         } else {
-                            # Decreasing the cluster size to find the ultimate sample size
+                            # Decreasing with small steps to find the ultimate number of clusters
                             low <- low                         #lower bound
-                            high <- n1                         #higher bound
-                            n1 <- round((low + high) / 2)      #point in the middle
-                            print("Lowering") # Eliminate later
+                            n1 <- n1 - 1 
+                            high <- (n1*2) - low
+                            if (n2 < 30) warning("The number of groups is less than 30.
+                                                 This may cause problems in convergence and singularity.")
+                            print("Lowering with baby steps") # Eliminate late
                         }
+                    } else if (current_eta == previous_eta && n1 - low == 1) {
+                        # If there is no change in eta and the lower bound is close to the middle point
+                        ultimate_sample_size == TRUE
+                        break
                     } else {
                         # Decreasing the cluster size to find the ultimate sample size
                         low <- low                         #lower bound
@@ -208,9 +196,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
             previous_eta <- min(prop_BF10, prop_BF01)
             print(c("low:", low, "n2:", n2, "n1:", n1, "h:", high, "b:", b)) # Eliminate
             
-
             # If the sample size reaches the maximum
-
             if (n2 == max) {
                 break
             } else if (n1 == max) {
