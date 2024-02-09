@@ -2,7 +2,8 @@
 
 # Model fitting
 fit_lmer <- function(x){
-    fitted_model <- lmer(resp ~ intervention + control - 1 + (1 | id), data = x)
+    suppressMessages({
+    fitted_model <- lmer(resp ~ intervention + control - 1 + (1 | id), data = x)})
     return(fitted_model)
 }
 
