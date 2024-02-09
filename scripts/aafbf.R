@@ -10,7 +10,7 @@
 # n_eff: Effective sample size.
 
 calc_aafbf <- function(type, estimates, sigma, b, n_eff) {
-    if (type == "inequalities") {
+    if (type == "Inequalities") {
         # Complexities
         comp1 <- .5
         comp2 <- .5
@@ -30,7 +30,7 @@ calc_aafbf <- function(type, estimates, sigma, b, n_eff) {
         pmp2 <- 1 - pmp1
         output <- list(bf.12 = AAFBF12, bf.21 = AAFBF21, pmp1 = pmp1, pmp2 = pmp2)
         
-    } else if (type == "equality") {
+    } else if (type == "Equality") {
         b_calc <- b * 1/n_eff                   # Calculate b
         # complexities
         comp0 <- dnorm(0, mean = 0, sd = sqrt(sigma[[1]]/b_calc))     # overlap of parameter under H0 and unconstrained prior -> density of the prior under Hu at the focal point 0
