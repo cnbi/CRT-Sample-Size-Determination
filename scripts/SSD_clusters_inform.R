@@ -12,22 +12,26 @@
 ## BF.thresh: Numeric. Value of the Bayes factor that is going to be the threshold.
 ## eta: Numeric. Probability of exceeding Bayes Factor threshold.
 ## fixed: Character. Indicating which sample is fixed (n1 or n2)
+## max: Maximum sample size.
+## bacth_size: This parameter determines the size of batches used during the fitting of the multilevel model.
 
-SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, BF.thresh,
-                           eta = 0.8, fixed = 'n2') {
+SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh,
+                           eta = 0.8, fixed = 'n2', max = 1000, batch_size = 100) {
     # Libraries -----------------
     library(lme4)
-    #library(bain)
     library(dplyr)
     
     # Warnings
-    if (is.numeric(c(eff.size, n1, n2, n.datasets, rho, BF.thresh, eta)) == FALSE) stop("The arguments, wtih exception of fixed, must be numeric") 
-    if (eff.size > 1) stop("Effect size must be standardized")
-    if (n2 %% 2 > 0) stop("Number of clusters must be even")
-    if (rho > 1) stop("The intraclass correlation must be standardized. Thus it cannot be more than 1")
-    if (eta > 1) stop("Probability of exceeding Bayes Factor threshold cannot be more than 1")
-    if (is.character(fixed) == FALSE) stop("Can only be a character indicating n1 or n2.")
-    if (fixed %in% c("n1", "n2") == FALSE) stop("Can only be a character indicating n1 or n2.")
+    if (is.numeric(c(eff_size, n1, n2, ndatasets, rho, BF_thresh, eta, max, batch_size)) == FALSE) 
+        stop("All arguments, except 'fixed', must be numeric")
+    if (eff_size < 0) stop("The effect size must be a positive value ")
+    if (n2 %% 2 > 0) stop("The number of clusters must be even")
+    if (rho > 1) stop("The intraclass correlation must be standardized and cannot be larger than 1")
+    if (rho < 0) stop("The intraclass correlation must be a positive value")
+    if (eta > 1) stop("The probability of exceeding Bayes Factor threshold cannot be larger than 1")
+    if (eta < 0) stop("The probability of exceeding Bayes Factor threshold must be a positive value")
+    if (is.character(fixed) == FALSE) stop("Fixed can only be a character indicating n1 or n2.")
+    if (fixed %in% c("n1", "n2") == FALSE) stop("Fixed can only be a character indicating n1 or n2.")
     
     # Functions
     source('data_generation.R')
@@ -35,124 +39,181 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
     source("print_results.R")
     source("aafbf.R")
     
-    # Starting values ------------
-    total.var <- 1
-    var.u0 <- rho * total.var       #Between-cluster variance
-    var.e <- total.var - var.u0     #Within-cluster variance
-    iterations <- 1
-    condition_met <- FALSE          #Indicator of the fulfillment of the power criteria.
-    best_result <- FALSE            #Indicator if we find the optimal value of sample size.
+    # Starting values ----------------------------------------------------------
+    total_var <- 1
+    var_u0 <- rho * total_var       #Between-cluster variance
+    var_e <- total_var - var_u0     #Within-cluster variance
+    condition_met <- FALSE          #Indication we met the power criteria.
+    ultimate_sample_sizes <- FALSE            #Indication that we found the required sample size.
+    results_H1 <- matrix(NA, nrow = ndatasets, ncol = 4)
+    b <- 1
     
-    # Binary search start
-    if (fixed == 'n1') {
-        low <- 6                   #lower bound
-    } else if (fixed == 'n2') {
-        low <- 5                   #lower bound
+    # Binary search start ------------------------------------------------------
+    if (fixed == "n1") {
+        min_sample <- 6                     # Minimum cluster size
+        low <- min_sample                   #lower bound
+    } else if (fixed == "n2") {
+        min_sample <- 5                     # Minimum number of clusters
+        low <- min_sample                   #lower bound
     }
-    high <- 1000                    #higher bound
+    high <- max                    #higher bound
     
-    #Hypotheses
-    hypothesis1 <- "Dintervention>Dcontrol"
-    hypothesis2 <- "Dintervention<Dcontrol"
-    #hypoth <- paste(hypothesis1, ";", hypothesis2)
+    #Hypotheses ----------------------------------------------------------------
+    hypothesis1 <- "Intervention1 > Intervention2"
+    hypothesis2 <- "Intervention1 < Intervention2"
+    final_SSD <- vector(mode = "list", 3)
+    type <- "Inequalities"
+    previous_high <- 0
+    previous_eta <- 0
+    current_eta <- 0
     
-    previous <- 0
-    
-    # Simulation ---------------
-    while (best_result == FALSE) {
+    # Simulation of data and evaluation of condition  ----------------------------------
+    while (ultimate_sample_sizes == FALSE) {
         # If H1 is true
-        data_crt <- do.call(gen_CRT_data, list(n.datasets, n1, n2, var.u0, var.e, 
-                                               eff.size, b = 1, type = "inequalities"))
-        colnames(data_crt) <- c('BF.12', 'BF.21', 'PMP.1', 'PMP.2')
-        # Evaluation of condition----
+        data_H1 <- do.call(gen_CRT_data, list(ndatasets, n1, n2, var_u0, var_e,
+                                              mean_interv = eff_size, 
+                                              batch_size = batch_size))
+        
+        #Approximated adjusted fractional Bayes factors------------------------------
+        n_eff_H1 <- ((n1 * n2) / (1 + (n1 - 1) * data_H1$rho_data)) / 2
+        output_AAFBF_H1 <- Map(calc_aafbf, type, data_H1$estimates, data_H1$cov_list, list(b), n_eff_H1)
+        
+        # Results ---------------------------------------------------------------------
+        results_H1[, 1] <- unlist(lapply(output_AAFBF_H1, extract_res, 1)) # Bayes factor H1vsH2
+        results_H1[, 2] <- unlist(lapply(output_AAFBF_H1, extract_res, 4)) #posterior model probabilities of H1
+        results_H1[, 3] <- unlist(lapply(output_AAFBF_H1, extract_res, 2)) # Bayes factor H2vsH1
+        results_H1[, 4] <- unlist(lapply(output_AAFBF_H1, extract_res, 3)) #posterior model probabilities of H2
+        
+        colnames(results_H1) <- c("BF.12", "PMP.1", "BF.21","PMP.2")
+        
+        #Evaluation of condition -------------------------------------------
         # Proportion
-        # browser()
-        prop.BF12 <- length(which(data_crt[, 'BF.12'] > BF.thresh)) / n.datasets 
+        #browser()
+        prop_BF12 <- length(which(results_H1[, "BF.12"] > BF_thresh)) / ndatasets
         # Evaluation
-        ifelse(prop.BF12 > eta, condition_met <- TRUE, condition_met <- FALSE) #Maybe I have to change this part
-        # browser()
-        # Binary search algorithm----
+        ifelse(prop_BF12 > eta, condition_met <- TRUE, condition_met <- FALSE)
+        current_eta <- prop_BF12
+        
+        # Binary search algorithm ------------------------------------------
         if (condition_met == FALSE) {
             print(c("Using cluster size:", n1, "and number of clusters:", n2,
-                  "prop.BF12: ", prop.BF12))
-            if (fixed == 'n1') {
-                low <- n2                        #lower bound
-                high <- high                     #higher bound
-                n2 <- round((low + high) / 2)    #point in the middle
-                ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
-            } else if (fixed == 'n2') {
+                    "prop_BF12: ", prop_BF12))
+            if (fixed == "n1") {
+                # Increase the number of clusters since eta is too small
+                low <- n2                         #lower bound
+                high <- high                      #higher bound
+                n2 <- round((low + high) / 2)     #point in the middle
+                ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1) # Ensure number of clusters is even
+                
+                # Adjust higher bound when there is a ceiling effect
+                if (high + n2 == high * 2) {
+                    low <- n2                         #lower bound
+                    #Set the higher bound based on the previous high or the maximum
+                    if (previous_high > 0) {
+                        high <- previous_high
+                    } else {
+                        high <- max
+                    }
+                    n2 <- round((low + high) / 2)     #point in the middle
+                }
+            } else if (fixed == "n2") {
+                # Increase the cluster sizes since eta is too small
                 low <- n1                        #lower bound
                 high <- high                     #higher bound
                 n1 <- round((low + high) / 2)    #point in the middle
+                
+                # Adjust higher bound when there is a ceiling effect
+                if (high + n1 == high * 2) {
+                    low <- n1                        #lower bound
+                    #Set the higher bound based on the previous high or the maximum
+                    if (previous_high > 0) {
+                        high <- previous_high
+                    } else {
+                        high <- max
+                    }
+                    n1 <- round((low + high) / 2)    #point in the middle
+                }
             }
         } else if (condition_met == TRUE) {
-            print(c("Using cluster size:", n1, "and number of clusters:", n2,
-                  "prop.BF12:", prop.BF12))
-            if (fixed == 'n1') {
-                if (prop.BF12 - eta < 0.1) { # Proportion is close enough
-                    best_result == TRUE
-                    break
-                } else if (previous == prop.BF12) {
+            print(c("Using cluster size:", n1,
+                    "and number of clusters:", n2,
+                    "prop_BF12: ", prop_BF12,
+                    "low: ", low, "high: ", high))
+            previous_high <- high
+            if (fixed == "n1") {
+                # Eta is close enough to the desired eta
+                if (current_eta - eta < 0.1) {
                     if (n2 - low == 2) {
-                        best_result == TRUE
-                        print("Found it!") # Eliminate later
-                        break
-                    } else { # Decreasing
+                        ultimate_sample_sizes = TRUE
+                    } else {
+                        # Decreasing with small steps to find the ultimate number of clusters
                         low <- low                         #lower bound
-                        high <- n2                       #higher bound
-                        n2 <- round((low + high) / 2)    #point in the middle
+                        n2 <- n2 - 2 
+                        high <- (n2*2) - low
                         ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
-                        print("Lowering") # Eliminate later
-                        if (n2 < 30) warning("The number of groups is less than 30. This could lead to problems in convergence and singularity.")
+                        if (n2 < 30) warning("The number of groups is less than 30.
+                                                 This may cause problems in convergence and singularity.")
+                        print("Lowering with baby steps") # Eliminate late
                     }
-                } else {   #Decreasing to find the optimal
-                    low <- low                       #lower bound
-                    high <- n2                       #higher bound
-                    n2 <- round((low + high) / 2)    #point in the middle
+                } else if (previous_eta == current_eta && n2 - low == 2) {
+                    # If there is no change in eta and the lower bound is close to the middle point
+                    ultimate_sample_sizes = TRUE
+                } else {
+                    # Decreasing to find the ultimate number of clusters
+                    low <- low                         #lower bound
+                    high <- n2                         #higher bound
+                    n2 <- round((low + high) / 2)      #point in the middle
                     ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
-                    if (n2 < 30) warning("The number of groups is less than 30. This could lead to problems in convergence and singularity.")
+                    if (n2 < 30) warning("The number of groups is less than 30.
+                                             This may cause problems in convergence and singularity.")
                     print("Lowering") # Eliminate later
                 }
-            } else if (fixed == 'n2') {
-                if (prop.BF12 - eta < 0.1) { # Proportion close enough
-                    best_result == TRUE
-                    break
-                } else if (prop.BF12 == previous) { # There is no change in the proportion and the lower bound
-                    if (n1 - low == 1) {
-                        best_result == TRUE
-                        break
+            } else if (fixed == "n2") {
+                # Eta is close enough to the desired eta
+                if (current_eta - eta < 0.1) {
+                    if (n1 - low == 2) {
+                        ultimate_sample_sizes = TRUE
                     } else {
+                        # Decreasing with small steps to find the ultimate number of clusters
                         low <- low                         #lower bound
-                        high <- n1                       #higher bound
-                        n1 <- round((low + high) / 2)    #point in the middle
-                        print("Lowering") # Eliminate later
+                        n1 <- n1 - 1 
+                        high <- (n1*2) - low
+                        if (n2 < 30) warning("The number of groups is less than 30.
+                                                 This may cause problems in convergence and singularity.")
+                        print("Lowering with baby steps") # Eliminate late
                     }
+                } else if (current_eta == previous_eta && n1 - low == 1) {
+                    # If there is no change in eta and the lower bound is close to the middle point
+                    ultimate_sample_sizes = TRUE
                 } else {
-                    low <- low                       #lower bound
-                    high <- n1                       #higher bound
-                    n1 <- round((low + high) / 2)    #point in the middle
+                    # Decreasing the cluster size to find the ultimate sample size
+                    low <- low                         #lower bound
+                    high <- n1                         #higher bound
+                    n1 <- round((low + high) / 2)      #point in the middle
                     print("Lowering") # Eliminate later
                 }
             }
-        }
-        previous <- prop.BF12
-        # Stop because the number of clusters is crazy, is not plausible
-        if (n2 == 1000) {
+            
+        } # Condition met
+        # Break loop
+        # If the sample size reaches the maximum
+        print(c("low:", low, "n2:", n2, "n1:", n1, "h:", high)) # Eliminate
+        previous_eta <- current_eta
+        if (n2 == max) {
             break
-        } else if (n1 == 1000) {
+        } else if (n1 == max) {
             break
         }
-        
-    }
-    # Final output -----------
+    } # Finish while loop ultimate_sample_size
     SSD_object <- list("n1" = n1,
                        "n2" = n2,
-                       "Eta" = prop.BF12,
-                       "data" = data_crt,
-                       "hypotheses" = list(hypothesis1, hypothesis2),
-                       "BF.threshold" = BF.thresh,
-                       "evaluation" = "Inequalities")
+                       "Proportion.BF12" = prop_BF12,
+                       "data_H1" = results_H1,
+                       "HYpotheses" = list(hypothesis1, hypothesis2),
+                       "BF.threshold" = BF_thresh,
+                       "Evaluation" = type)
     
+    # Final output -----
     print_results(SSD_object)
     invisible(SSD_object)
 }
@@ -171,12 +232,11 @@ SSD_crt_inform <- function(eff.size, n1 = 15, n2 = 30, n.datasets = 1000, rho, B
 # time.taken <- end.time - start.time
 # time.taken
 # 
-# start.time <- Sys.time()
-# SSD_crt_inform(eff.size = 0.4, n.datasets = 15, rho = 0.05, BF.thresh = 3, fixed = "n1") #singularity
-# end.time <- Sys.time()
-# time.taken <- end.time - start.time
-# time.taken
-# 
+start.time <- Sys.time()
+a <- SSD_crt_inform(eff_size = 0.4, ndatasets = 100, rho = 0.05, BF_thresh = 3, eta = 0.7, fixed = "n1") #singularity
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
 # 
 # start.time <- Sys.time()
 # SSD_crt_inform(eff.size = 0.4, n.datasets = 15, rho = 0.01, BF.thresh = 6, fixed = "n1")
