@@ -323,10 +323,11 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     hypothesis1 <- "Intervention>Control"
     null <- "Intervention=Control"
     final_SSD <- vector(mode = "list", length = b_fract)
-    type <- "equality"
+    type <- "Equality"
     b <- 1
     previous_high <- 0
     previous_eta <- 0
+    current_eta <- 0
     
     # Simulation of data and evaluation of condition  ----------------------------------
     while (ultimate_sample_sizes == FALSE) {
@@ -369,6 +370,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
             prop_BF01 <- length(which(results_H0[, "BF.01"] > BF_thresh)) / ndatasets
             # Evaluation
             ifelse(prop_BF01 > eta & prop_BF10 > eta, condition_met <- TRUE, condition_met <- FALSE)
+            previous_eta <- current_eta
             current_eta <- min(prop_BF10, prop_BF01)
             
             # Binary search algorithm ------------------------------------------
@@ -385,7 +387,12 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     # Adjust higher bound when there is a ceiling effect
                     if (high + n2 == high * 2) {
                         low <- n2                         #lower bound
-                        high <- max                       #higher bound
+                        #Set the higher bound based on the previous high or the maximum
+                        if (previous_high > 0) {
+                            high <- previous_high
+                        } else {
+                            high <- max
+                        }
                         n2 <- round((low + high) / 2)     #point in the middle
                     }
                 } else if (fixed == "n2") {
