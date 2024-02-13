@@ -328,6 +328,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     previous_high <- 0
     previous_eta <- 0
     current_eta <- 0
+    singular_warn<- 0
     
     # Simulation of data and evaluation of condition  ----------------------------------
     while (ultimate_sample_sizes == FALSE) {
@@ -426,13 +427,14 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                                    "Proportion.BF10" = prop_BF10,
                                    "b.frac" = b,
                                    "data_H0" = results_H0,
-                                   "data_H1" = results_H1)
-                
+                                   "data_H1" = results_H1,
+                                   "singularity" = cbind(H0 = data_H0$singularity, H1 = data_H1$singularity))
                 if (fixed == "n1") {
                     # Eta is close enough to the desired eta
                     if (current_eta - eta < 0.1) {
                         if (n2 - low == 2) {
                             final_SSD[[b]] <- SSD_object
+                            singular_warn <- c(singular_warn, data_H0$singularity, data_H1$singularity)
                             b <- b + 1
                             low <- min_sample
                             previous_eta <- 0
@@ -453,6 +455,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     } else if (previous_eta == current_eta && n2 - low == 2) {
                         # If there is no change in eta and the lower bound is close to the middle point
                         final_SSD[[b]] <- SSD_object
+                        singular_warn <- c(singular_warn, data_H0$singularity, data_H1$singularity)
                         b <- b + 1
                         low <- min_sample
                         previous_eta <- 0
@@ -475,6 +478,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     if (current_eta - eta < 0.1) {
                         if (n1 - low == 2) {
                             final_SSD[[b]] <- SSD_object
+                            singular_warn <- c(singular_warn, data_H0$singularity, data_H1$singularity)
                             b <- b + 1
                             low <- min_sample
                             previous_eta <- 0
@@ -494,6 +498,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     } else if (current_eta == previous_eta && n1 - low == 1) {
                         # If there is no change in eta and the lower bound is close to the middle point
                         final_SSD[[b]] <- SSD_object
+                        singular_warn <- c(singular_warn, data_H0$singularity, data_H1$singularity)
                         b <- b + 1
                         low <- min_sample
                         previous_eta <- 0
@@ -510,7 +515,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     }
                 }
                 
-            } # Finish condition met
+            } # Finish condition_met == TRUE
             previous_eta <- min(prop_BF10, prop_BF01)
             print(c("low:", low, "n2:", n2, "n1:", n1, "h:", high, "b:", b)) # Eliminate
         } # Finish while loop b
@@ -531,6 +536,8 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     
     # Final output -----
     print_results(final_SSD)
+    if (any(singular_warn > 0)) warning("At least one of the fitted models is singular. For more information about singularity see help('issingular').
+                               The number of models that are singular can be found in the output object.")
     invisible(final_SSD)
 }
 
