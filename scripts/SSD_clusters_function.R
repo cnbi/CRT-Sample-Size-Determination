@@ -273,7 +273,7 @@
 # # Again maximum value
 
 # New version -------------------------------------------------------------------
-SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh,
+SSD_crt_nullV2 <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh,
                          eta = 0.8, fixed = "n2", b_fract = 3, max = 1000, batch_size = 100) {
     # Libraries ----
     library(lme4)
@@ -439,16 +439,6 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                             previous_high <- 0
                             high <- max
                             next
-                        } else {
-                            # Decreasing with small steps to find the ultimate number of clusters
-                            low <- low                         #lower bound
-                            n2 <- n2 - 2 
-                            high <- (n2*2) - low
-                            ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
-                            if (n2 < 30) warning("The number of groups is less than 30.
-                                                 This may cause problems in convergence and singularity.")
-                            print("Lowering with baby steps") # Eliminate late
-                            break
                         }
                     } else if (previous_eta == current_eta && n2 - low == 2) {
                         # If there is no change in eta and the lower bound is close to the middle point
@@ -481,15 +471,6 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                             previous_high <- 0
                             high <- max
                             next
-                        } else {
-                            # Decreasing with small steps to find the ultimate number of clusters
-                            low <- low                         #lower bound
-                            n1 <- n1 - 1 
-                            high <- (n1*2) - low
-                            if (n2 < 30) warning("The number of groups is less than 30.
-                                                 This may cause problems in convergence and singularity.")
-                            print("Lowering with baby steps") # Eliminate late
-                            break
                         }
                     } else if (current_eta == previous_eta && n1 - low == 1) {
                         # If there is no change in eta and the lower bound is close to the middle point
