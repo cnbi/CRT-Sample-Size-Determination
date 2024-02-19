@@ -273,7 +273,7 @@
 # # Again maximum value
 
 # New version -------------------------------------------------------------------
-SSD_crt_nullV2 <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh,
+SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh,
                          eta = 0.8, fixed = "n2", b_fract = 3, max = 1000, batch_size = 100) {
     # Libraries ----
     library(lme4)
@@ -323,7 +323,7 @@ SSD_crt_nullV2 <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
     hypothesis1 <- "Intervention>Control"
     null <- "Intervention=Control"
     final_SSD <- vector(mode = "list", length = b_fract)
-    type <- "Equality"
+    type <- "equality"
     b <- 1
     previous_high <- 0
     previous_eta <- 0
@@ -354,14 +354,14 @@ SSD_crt_nullV2 <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
             results_H1[, 2] <- unlist(lapply(output_AAFBF_H1, extract_res, 4)) #posterior model probabilities of H1
             results_H1[, 3] <- unlist(lapply(output_AAFBF_H1, extract_res, 2)) # Bayes factor H0vsH1
             results_H1[, 4] <- unlist(lapply(output_AAFBF_H1, extract_res, 3)) #posterior model probabilities of H0
-
+            
             colnames(results_H1) <- c("BF.10", "PMP.1", "BF.01","PMP.0")
             
             results_H0[, 1] <- unlist(lapply(output_AAFBF_H0, extract_res, 1)) # Bayes factor H1vsH0
             results_H0[, 2] <- unlist(lapply(output_AAFBF_H0, extract_res, 4)) #posterior model probabilities of H1
             results_H0[, 3] <- unlist(lapply(output_AAFBF_H0, extract_res, 2)) # Bayes factor H0vsH1
             results_H0[, 4] <- unlist(lapply(output_AAFBF_H0, extract_res, 3)) #posterior model probabilities of H0
-
+            
             colnames(results_H0) <- c("BF.10", "PMP.1", "BF.01", "PMP.0")
             #Evaluation of condition -------------------------------------------
             # Proportion
@@ -372,11 +372,12 @@ SSD_crt_nullV2 <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
             ifelse(prop_BF01 > eta & prop_BF10 > eta, condition_met <- TRUE, condition_met <- FALSE)
             previous_eta <- current_eta
             current_eta <- min(prop_BF10, prop_BF01)
-            
+            print("Bayes factor check!")
             # Binary search algorithm ------------------------------------------
             if (condition_met == FALSE) {
                 print(c("Using cluster size:", n1, "and number of clusters:", n2,
                         "prop_BF01: ", prop_BF01, "prop_BF10: ", prop_BF10, "b:", b))
+                print("Increasing sample")
                 if (fixed == "n1") {
                     # Increase the number of clusters since eta is too small
                     low <- n2                         #lower bound
@@ -387,12 +388,7 @@ SSD_crt_nullV2 <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
                     # Adjust higher bound when there is a ceiling effect
                     if (high + n2 == high * 2) {
                         low <- n2                         #lower bound
-                        #Set the higher bound based on the previous high or the maximum
-                        if (previous_high > 0) {
-                            high <- previous_high
-                        } else {
-                            high <- max
-                        }
+                        high <- max                       #higher bound
                         n2 <- round((low + high) / 2)     #point in the middle
                     }
                 } else if (fixed == "n2") {
@@ -427,19 +423,21 @@ SSD_crt_nullV2 <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
                                    "b.frac" = b,
                                    "data_H0" = results_H0,
                                    "data_H1" = results_H1)
+                print("Lowerign sample")
+                print(c("previous:", previous_eta))
+                previous_eta <- current_eta
                 
                 if (fixed == "n1") {
                     # Eta is close enough to the desired eta
-                    if (current_eta - eta < 0.1) {
-                        if (n2 - low == 2) {
-                            final_SSD[[b]] <- SSD_object
-                            b <- b + 1
-                            low <- min_sample
-                            previous_eta <- 0
-                            previous_high <- 0
-                            high <- max
-                            next
-                        }
+                    if (current_eta - eta < 0.1 && n2 - low == 2) {
+                        
+                        final_SSD[[b]] <- SSD_object
+                        b <- b + 1
+                        low <- min_sample
+                        previous_eta <- 0
+                        previous_high <- 0
+                        high <- max
+                        next
                     } else if (previous_eta == current_eta && n2 - low == 2) {
                         # If there is no change in eta and the lower bound is close to the middle point
                         final_SSD[[b]] <- SSD_object
@@ -462,16 +460,15 @@ SSD_crt_nullV2 <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
                     }
                 } else if (fixed == "n2") {
                     # Eta is close enough to the desired eta
-                    if (current_eta - eta < 0.1) {
-                        if (n1 - low == 2) {
-                            final_SSD[[b]] <- SSD_object
-                            b <- b + 1
-                            low <- min_sample
-                            previous_eta <- 0
-                            previous_high <- 0
-                            high <- max
-                            next
-                        }
+                    if (current_eta - eta < 0.1 && n1 - low == 1) {
+                        
+                        final_SSD[[b]] <- SSD_object
+                        b <- b + 1
+                        low <- min_sample
+                        previous_eta <- 0
+                        previous_high <- 0
+                        high <- max
+                        next
                     } else if (current_eta == previous_eta && n1 - low == 1) {
                         # If there is no change in eta and the lower bound is close to the middle point
                         final_SSD[[b]] <- SSD_object
@@ -492,7 +489,7 @@ SSD_crt_nullV2 <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
                 }
                 
             } # Finish condition met
-            previous_eta <- min(prop_BF10, prop_BF01)
+            # previous_eta <- min(prop_BF10, prop_BF01)
             print(c("low:", low, "n2:", n2, "n1:", n1, "h:", high, "b:", b)) # Eliminate
         } # Finish while loop b
         print(c("b fraction:", b))
@@ -514,6 +511,7 @@ SSD_crt_nullV2 <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
     print_results(final_SSD)
     invisible(final_SSD)
 }
+
 
 # nulla <- SSD_crt_nullv2(eff_size = 0.5, ndatasets = 100, rho = 0.1, BF_thresh = 3, fixed = "n1",
 #                       b_fract = 3)
