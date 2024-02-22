@@ -118,6 +118,7 @@ gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u
     output_lmer[start_index:end_index] <- lapply(data.list[start_index:end_index], fit_lmer)
   }
   marker <- lapply(output_lmer, marker_func) # Mark singularity
+  singular_datasets <- Reduce("+", marker)
   
   estimates <- lapply(output_lmer, fixef)                 # Means
   cov_intervention <- lapply(output_lmer, varcov, 1)      # Covariance
@@ -135,5 +136,6 @@ gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u
   
   return(output <- list("rho_data" = rho_data,
                         "estimates" = estimates,
-                        "cov_list" = cov_list))
+                        "cov_list" = cov_list,
+                        "singularity" = singular_datasets))
 }
