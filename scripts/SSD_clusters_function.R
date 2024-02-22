@@ -328,7 +328,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     previous_high <- 0
     previous_eta <- 0
     current_eta <- 0
-    singular_warn<- 0
+    singular_warn <- 0
     
     # Simulation of data and evaluation of condition  ----------------------------------
     while (ultimate_sample_sizes == FALSE) {
@@ -436,7 +436,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         n1 <- round((low + high) / 2)    #point in the middle
                         
                         # Adjust higher bound when there is a ceiling effect
-                        if ((low + n1 == high * 2)|(current_eta == previous_eta)) {
+                        if ((low + n1 == high * 2) | (current_eta == previous_eta)) {
                             low <- n1                        #lower bound
                             #Set the higher bound based on the previous high or the maximum
                             if (previous_high > 0 ) {
@@ -463,7 +463,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                                    "b.frac" = b,
                                    "data_H0" = results_H0,
                                    "data_H1" = results_H1,
-                                  "singularity" = cbind(H0 = data_H0$singularity, H1 = data_H1$singularity))
+                                   "singularity" = cbind(H0 = data_H0$singularity, H1 = data_H1$singularity))
                 print("Lowerign sample")
                 print(c("previous:", previous_eta))
                 previous_eta <- current_eta
@@ -479,7 +479,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         previous_high <- 0
                         high <- max
                         next
-
+                        
                     } else if (previous_eta == current_eta && n2 - low == 2) {
                         # If there is no change in eta and the lower bound is close to the middle point
                         final_SSD[[b]] <- SSD_object
@@ -545,7 +545,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                 }
             } # Finish condition met
             # previous_eta <- min(prop_BF10, prop_BF01)
-
+            
             print(c("low:", low, "n2:", n2, "n1:", n1, "h:", high, "b:", b)) # Eliminate
         } # Finish while loop b
         
