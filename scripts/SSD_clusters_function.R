@@ -368,48 +368,87 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
             #browser()
             prop_BF10 <- length(which(results_H1[, "BF.10"] > BF_thresh)) / ndatasets
             prop_BF01 <- length(which(results_H0[, "BF.01"] > BF_thresh)) / ndatasets
+            
             # Evaluation
             ifelse(prop_BF01 > eta & prop_BF10 > eta, condition_met <- TRUE, condition_met <- FALSE)
             previous_eta <- current_eta
             current_eta <- min(prop_BF10, prop_BF01)
             print("Bayes factor check!")
+            
             # Binary search algorithm ------------------------------------------
             if (condition_met == FALSE) {
                 print(c("Using cluster size:", n1, "and number of clusters:", n2,
-                        "prop_BF01: ", prop_BF01, "prop_BF10: ", prop_BF10, "b:", b))
+                        "prop_BF01: ", prop_BF01, "prop_BF10: ", prop_BF10, "b:", b,
+                        "low:", low, "high:", high))
                 print("Increasing sample")
                 if (fixed == "n1") {
-                    # Increase the number of clusters since eta is too small
-                    low <- n2                         #lower bound
-                    high <- high                      #higher bound
-                    n2 <- round((low + high) / 2)     #point in the middle
-                    ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1) # Ensure number of clusters is even
-                    
-                    # Adjust higher bound when there is a ceiling effect
-                    if (high + n2 == high * 2) {
+                    if (n2 == max)    {# If the sample size reaches the maximum
+                        final_SSD[[b]] <- list("n1" = n1,
+                                               "n2" = n2,
+                                               "Proportion.BF01" = prop_BF01,
+                                               "Proportion.BF10" = prop_BF10,
+                                               "b.frac" = b,
+                                               "data_H0" = results_H0,
+                                               "data_H1" = results_H1)
+                        b <- b + 1
+                        low <- min_sample
+                        previous_eta <- 0
+                        previous_high <- 0
+                        high <- max
+                        next
+                    } else {
+                        # Increase the number of clusters since eta is too small
                         low <- n2                         #lower bound
-                        high <- max                       #higher bound
+                        high <- high                      #higher bound
                         n2 <- round((low + high) / 2)     #point in the middle
+                        ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1) # Ensure number of clusters is even
+                        # Adjust higher bound when there is a ceiling effect
+                        if (low + n2 == high * 2) {
+                            low <- n2                         #lower bound
+                            if (previous_high > 0) {
+                                high <- previous_high
+                            } else {
+                                high <- max                       #higher bound
+                            }
+                            n2 <- round((low + high) / 2)     #point in the middle
+                        } 
                     }
                 } else if (fixed == "n2") {
-                    # Increase the cluster sizes since eta is too small
-                    low <- n1                        #lower bound
-                    high <- high                     #higher bound
-                    n1 <- round((low + high) / 2)    #point in the middle
-                    
-                    # Adjust higher bound when there is a ceiling effect
-                    if (high + n1 == high * 2) {
+                    if (n1 == max)    {# If the sample size reaches the maximum
+                        final_SSD[[b]] <- list("n1" = n1,
+                                               "n2" = n2,
+                                               "Proportion.BF01" = prop_BF01,
+                                               "Proportion.BF10" = prop_BF10,
+                                               "b.frac" = b,
+                                               "data_H0" = results_H0,
+                                               "data_H1" = results_H1)
+                        b <- b + 1
+                        low <- min_sample
+                        previous_eta <- 0
+                        previous_high <- 0
+                        high <- max
+                        next
+                    } else {
+                        # Increase the cluster sizes since eta is too small
                         low <- n1                        #lower bound
-                        #Set the higher bound based on the previous high or the maximum
-                        if (previous_high > 0) {
-                            high <- previous_high
-                        } else {
-                            high <- max
-                        }
+                        high <- high                     #higher bound
                         n1 <- round((low + high) / 2)    #point in the middle
+                        
+                        # Adjust higher bound when there is a ceiling effect
+                        if ((low + n1 == high * 2)|(current_eta == previous_eta)) {
+                            low <- n1                        #lower bound
+                            #Set the higher bound based on the previous high or the maximum
+                            if (previous_high > 0 ) {
+                                high <- previous_high
+                            } else {
+                                high <- max
+                            }
+                            n1 <- round((low + high) / 2)    #point in the middle
+                        }
                     }
                 }
                 break
+                
             } else if (condition_met == TRUE) {
                 print(c("Using cluster size:", n1,
                         "and number of clusters:", n2,
@@ -430,7 +469,6 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                 if (fixed == "n1") {
                     # Eta is close enough to the desired eta
                     if (current_eta - eta < 0.1 && n2 - low == 2) {
-                        
                         final_SSD[[b]] <- SSD_object
                         b <- b + 1
                         low <- min_sample
@@ -457,11 +495,11 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                                              This may cause problems in convergence and singularity.")
                         print("Lowering") # Eliminate later
                         break
+                        
                     }
                 } else if (fixed == "n2") {
                     # Eta is close enough to the desired eta
                     if (current_eta - eta < 0.1 && n1 - low == 1) {
-                        
                         final_SSD[[b]] <- SSD_object
                         b <- b + 1
                         low <- min_sample
@@ -478,6 +516,15 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         previous_high <- 0
                         high <- max
                         next
+                    } else if (current_eta == previous_eta && low + n2 == high * 2) { 
+                        # Reached the minimum number that meets the Bayesian power condition
+                        final_SSD[[b]] <- SSD_object
+                        b <- b + 1
+                        low <- min_sample
+                        previous_eta <- 0
+                        previous_high <- 0
+                        high <- max
+                        next
                     } else {
                         # Decreasing the cluster size to find the ultimate sample size
                         low <- low                         #lower bound
@@ -487,23 +534,20 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         break
                     }
                 }
-                
             } # Finish condition met
             # previous_eta <- min(prop_BF10, prop_BF01)
             print(c("low:", low, "n2:", n2, "n1:", n1, "h:", high, "b:", b)) # Eliminate
         } # Finish while loop b
+        
         print(c("b fraction:", b))
         # Break loop
-        # If the sample size reaches the maximum
-        if (n2 == max) {
-            break
-        } else if (n1 == max) {
-            break
-        } else if (b == b_fract + 1) {
+        if (b == b_fract + 1) {
             ultimate_sample_sizes = TRUE
         }
+        
         rm(data_H0, data_H1)
     } # Finish while loop ultimate_sample_size
+    
     final_SSD[[b_fract + 1]] <- list(null, hypothesis1)
     final_SSD[[b_fract + 2]] <- BF_thresh
     
@@ -511,7 +555,6 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     print_results(final_SSD)
     invisible(final_SSD)
 }
-
 
 # nulla <- SSD_crt_nullv2(eff_size = 0.5, ndatasets = 100, rho = 0.1, BF_thresh = 3, fixed = "n1",
 #                       b_fract = 3)
