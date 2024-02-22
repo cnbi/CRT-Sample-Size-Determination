@@ -323,7 +323,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     hypothesis1 <- "Intervention>Control"
     null <- "Intervention=Control"
     final_SSD <- vector(mode = "list", length = b_fract)
-    type <- "equality"
+    type <- "Equality"
     b <- 1
     previous_high <- 0
     previous_eta <- 0
