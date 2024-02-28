@@ -85,17 +85,17 @@ for (Row in seq(nrow_designN1)) {
   # Actual simulation
   ssd_results <- SSD_crt_null(eff_size = design_matrixN1[Row, 2],
                               n2 = design_matrixN1[Row, 4],
-                              ndatasets = 5000, rho = design_matrixN1[Row, 1],
+                              ndatasets = 10, rho = design_matrixN1[Row, 1],
                               BF_thresh = design_matrixN1[Row, 3], eta = 0.8,
                               fixed = as.character(design_matrixN1[Row, 5]),
-                              b_fract = b_fract, max = 1000, bach_size = 1000)
+                              b_fract = b_fract, max = 1000, batch_size = 100)
   # Save results
   end_time <- Sys.time()
-  file_name <- file.path(paste0(results_folder, "ResultsN1Row", Row, ".RDS"))
+  file_name <- file.path(results_folder, paste0( "serialResultsN1Row", Row, ".RDS"))
   saveRDS(ssd_results, file = file_name)
   # Save running time
   running_time <- as.numeric(difftime(end_time,start_time, units = "mins"))
-  time_name <- file.path(paste0(results_folder, "timeN1Row", Row, ".RDS"))
+  time_name <- file.path(results_folder, paste0("timeN1Row", Row, ".RDS"))
   saveRDS(running_time, file = time_name)
   rm(ssd_results)
   gc()
@@ -136,6 +136,17 @@ colnames(all_results_N2) <- c(names(design_matrixN2), "b", "median.BF01",
                               "mean.PMP0.H1", "mean.PMP1.H1", "eta.BF01",
                               "eta.BF10", "n2.final", "n1.final")
 saveRDS(all_results_N2, file = file.path(results_folder, "all_results_FindN2.RDS"))
+# Running time in minutes
+times_findN2 <- matrix(NA, nrow = length(1:40), ncol = 1)
+for (row_result in seq(40)) {
+  stored_result <- readRDS(paste0(results_folder, "/timeN2Row", row_result, ".RDS")) # I am not sure if it's necessary to store the 
+  times_findN2[row_result, 1] <- stored_result
+}
+times_results_N2 <- as.data.frame(cbind(design_matrixN2[1:40, ], times_findN2))
+colnames(times_results_N2) <- c(names(design_matrixN2), "total.time")             
+saveRDS(times_results_N2, file = file.path(results_folder, "times_findN2_upto40.RDS"))
+
+
 
 ## Fixed n2
 all_results_N1 <- matrix(NA, ncol = 11, nrow = (nrow_designN1 * b_fract))

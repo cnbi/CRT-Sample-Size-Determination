@@ -278,7 +278,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     # Libraries ----
     library(lme4)
     library(dplyr)
-    
+    print(eff_size)
     # Warnings
     if (is.numeric(c(eff_size, n1, n2, ndatasets, rho, BF_thresh, eta, b_fract, max, batch_size)) == FALSE) 
         stop("All arguments, except 'fixed', must be numeric")
@@ -334,7 +334,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     while (ultimate_sample_sizes == FALSE) {
         # If H1 is true
         data_H1 <- do.call(gen_CRT_data, list(ndatasets, n1, n2, var_u0, var_e,
-                                              mean_interv = eff_size, 
+                                              mean_interv = eff_size,
                                               batch_size = batch_size))
         
         # If H0 is true
@@ -413,7 +413,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                                 high <- max                       #higher bound
                             }
                             n2 <- round((low + high) / 2)     #point in the middle
-                        } 
+                        }
                     }
                 } else if (fixed == "n2") {
                     if (n1 == max)    {# If the sample size reaches the maximum
@@ -451,7 +451,6 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     }
                 }
                 break
-                
             } else if (condition_met == TRUE) {
                 print(c("Using cluster size:", n1,
                         "and number of clusters:", n2,
@@ -481,7 +480,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         previous_high <- 0
                         high <- max
                         next
-
+                        
                     } else if (previous_eta == current_eta && n2 - low == 2) {
                         # If there is no change in eta and the lower bound is close to the middle point
                         final_SSD[[b]] <- SSD_object
@@ -526,7 +525,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         previous_high <- 0
                         high <- max
                         next
-                    } else if (current_eta == previous_eta && low + n2 == high * 2) { 
+                    } else if (current_eta == previous_eta && low + n2 == high * 2) {
                         # Reached the minimum number that meets the Bayesian power condition
                         final_SSD[[b]] <- SSD_object
                         b <- b + 1
