@@ -278,7 +278,6 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     # Libraries ----
     library(lme4)
     library(dplyr)
-    print(eff_size)
     # Warnings
     if (is.numeric(c(eff_size, n1, n2, ndatasets, rho, BF_thresh, eta, b_fract, max, batch_size)) == FALSE) 
         stop("All arguments, except 'fixed', must be numeric")
