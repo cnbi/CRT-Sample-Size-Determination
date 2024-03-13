@@ -539,8 +539,6 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         low <- low                         #lower bound
                         high <- n1                         #higher bound
                         n1 <- round((low + high) / 2)      #point in the middle
-                        if (n2 < 30) warning("The number of groups is less than 30.
-                                                 This may cause problems in convergence and singularity.")
                         print("Lowering") # Eliminate later
                         break
                     }

@@ -22,8 +22,9 @@
 ## bacth_size: This parameter determines the size of batches used during the fitting of the multilevel model.
 
 
-SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh,
-                         eta = 0.8, fixed = "n2", b_fract = 3, max = 1000, batch_size = 100) {
+SSD_crt_null_plots <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh,
+                         eta = 0.8, fixed = "n2", b_fract = 3, max = 1000, batch_size = 100,
+                         increasing = FALSE) {
     # Libraries ----
     library(lme4)
     library(dplyr)
@@ -51,11 +52,11 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     total_var <- 1
     var_u0 <- rho * total_var       #Between-cluster variance
     var_e <- total_var - var_u0     #Within-cluster variance
-    #iterations <- 1 DELETE THIS
     eff_size0 <- 0                  #Effect size for null hypothesis
     condition_met <- FALSE          #Indication we met the power criteria.
     ultimate_sample_size <- FALSE            #Indication that we found the required sample size.
-    
+    results_H0 <- matrix(NA, nrow = ndatasets, ncol = 4)
+    results_H1 <- matrix(NA, nrow = ndatasets, ncol = 4)
     
     # Binary search start ------------------------------------------------------
     if (fixed == "n1") {
@@ -71,52 +72,78 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     hypothesis1 <- "Intervention>Control"
     null <- "Intervention=Control"
     final_SSD <- vector(mode = "list", length = b_fract)
-    
+    type <- "Equality"
+    ifelse(fixed == "n2", N <- n1, N <- n2)
+    SSD_dataset <- matrix(NA, nrow = ((max - N) + 1) * b_fract, ncol = 5)
+    b <- 1
+    singular_warn <- 0
+    iteration <- 1
     # Simulation of data and evaluation of condition  ----------------------------------
-    for (b in seq(b_fract)) {
-        low <- min_sample
-        previous_eta <- 0
-        previous_high <- 0
-        high <- max
-        
-        # If H1 is true
+    
+    repeat {
         data_H1 <- do.call(gen_CRT_data, list(ndatasets, n1, n2, var_u0, var_e,
-                                              mean_interv = eff_size, b, 
-                                              type = "equality", batch_size = batch_size))
-        colnames(data_H1) <- c("BF.10", "BF.01",
-                               "PMP.0", "PMP.1")
+                                              mean_interv = eff_size,
+                                              batch_size = batch_size))
+        
         # If H0 is true
         data_H0 <- do.call(gen_CRT_data, list(ndatasets, n1, n2, var_u0, var_e,
-                                              mean_interv = eff_size0, b,
-                                              type = "equality", batch_size == batch_size))
-        colnames(data_H0) <- c("BF.10", "BF.01",
-                               "PMP.0", "PMP.1")
-        print("Data generation check")
-        #Evaluation of condition -------------------------------------------
-        # Proportion
-        prop_BF01 <- length(which(data_H0[, "BF.01"] > BF_thresh)) / ndatasets
-        prop_BF10 <- length(which(data_H1[, "BF.10"] > BF_thresh)) / ndatasets
+                                              mean_interv = eff_size0,
+                                              batch_size = batch_size))
+        
+        while (b < (b_fract + 1))  {
+            #Approximated adjusted fractional Bayes factors------------------------------
+            n_eff_H1 <- ((n1 * n2) / (1 + (n1 - 1) * data_H1$rho_data)) / 2
+            output_AAFBF_H1 <- Map(calc_aafbf, type, data_H1$estimates, data_H1$cov_list, list(b), n_eff_H1)
+            
+            n_eff_H0 <- ((n1 * n2) / (1 + (n1 - 1) * data_H0$rho_data)) / 2
+            output_AAFBF_H0 <- Map(calc_aafbf, type, data_H0$estimates, data_H0$cov_list, list(b), n_eff_H0)
+            
+            # Results ---------------------------------------------------------------------
+            results_H1[, 1] <- unlist(lapply(output_AAFBF_H1, extract_res, 1)) # Bayes factor H1vsH0
+            results_H1[, 2] <- unlist(lapply(output_AAFBF_H1, extract_res, 4)) #posterior model probabilities of H1
+            results_H1[, 3] <- unlist(lapply(output_AAFBF_H1, extract_res, 2)) # Bayes factor H0vsH1
+            results_H1[, 4] <- unlist(lapply(output_AAFBF_H1, extract_res, 3)) #posterior model probabilities of H0
+            
+            colnames(results_H1) <- c("BF.10", "PMP.1", "BF.01","PMP.0")
+            
+            results_H0[, 1] <- unlist(lapply(output_AAFBF_H0, extract_res, 1)) # Bayes factor H1vsH0
+            results_H0[, 2] <- unlist(lapply(output_AAFBF_H0, extract_res, 4)) #posterior model probabilities of H1
+            results_H0[, 3] <- unlist(lapply(output_AAFBF_H0, extract_res, 2)) # Bayes factor H0vsH1
+            results_H0[, 4] <- unlist(lapply(output_AAFBF_H0, extract_res, 3)) #posterior model probabilities of H0
+            
+            colnames(results_H0) <- c("BF.10", "PMP.1", "BF.01", "PMP.0")
+            #Evaluation of condition -------------------------------------------
+            # Proportion / power
+            prop_BF10 <- length(which(results_H1[, "BF.10"] > BF_thresh)) / ndatasets
+            prop_BF01 <- length(which(results_H0[, "BF.01"] > BF_thresh)) / ndatasets
+            # Save results
+            if (increasing == FALSE) {
+                final_SSD[[b]] <- list("n1" = n1,
+                                       "n2" = n2,
+                                       "Proportion.BF01" = prop_BF01,
+                                       "Proportion.BF10" = prop_BF10,
+                                       "b.frac" = b,
+                                       "data_H0" = results_H0,
+                                       "data_H1" = results_H1)
+            } else if (increasing == TRUE) {
+                SSD_dataset[((iteration - 1)*b) + 1:b*iteration, ] <- c(n1, n2, prop_BF01, prop_BF10, b)
+            }
+            b <- b + 1
+        }
+        iteration <- iteration + 1
+        rm(data_H0, data_H1, results_H1, results_H0)
         # If the sample size reaches the maximum
-        if (n2 == max) {
+        if (fixed == "n1") {
+            n2 <- n2 + 2
+        } else if (fixed == "n2") {
+            n1 <- n1 + 1
+        }
+        if (n2 > max | increasing == FALSE) {
             break
-        } else if (n1 == max) {
+        } else if (n1 > max | increasing == FALSE) {
             break
         }
-        # Save results
-        SSD_object <- list("n1" = n1,
-                           "n2" = n2,
-                           "Proportion.BF01" = prop_BF01,
-                           "Proportion.BF10" = prop_BF10,
-                           "b.frac" = b,
-                           "data_H0" = data_H0,
-                           "data_H1" = data_H1)
-        final_SSD[[b]] <- SSD_object
-        rm(data_H0, data_H1)
     }
-    final_SSD[[b_fract + 1]] <- list(null, hypothesis1)
-    final_SSD[[b_fract + 2]] <- BF_thresh
-    
     # Final output -----
-    print_results(final_SSD)
     invisible(final_SSD)
 }

@@ -149,9 +149,12 @@ saveRDS(times_results_N2, file = file.path(results_folder, "times_findN2_upto40.
 
 
 ## Fixed n2
-all_results_N1 <- matrix(NA, ncol = 11, nrow = (nrow_designN1 * b_fract))
+last_rows <- c(64:81)
+results_folder <- "results_SimulationFindN1"
+all_results_N1 <- matrix(NA, ncol = 11, nrow = (length(last_rows) * b_fract))
 row_result <- 1
-for (row_desing in seq(nrow_designN1)) {
+
+for (row_desing in last_rows) {
   stored_result <- readRDS(paste0(results_folder, "/ResultsN1Row", row_desing, ".RDS"))
   row_result <- row_result
   for (b in seq(b_fract)) {
@@ -165,15 +168,16 @@ for (row_desing in seq(nrow_designN1)) {
     eta.BF01 <- stored_result[[b]]$Proportion.BF01
     eta.BF10 <- stored_result[[b]]$Proportion.BF10
     n1 <- stored_result[[b]]$n1
-    all_results_N1[row_desing, ] <- c(b, median.BF01, mean.PMP0.H0,
+    all_results_N1[row_result, ] <- c(b, median.BF01, mean.PMP0.H0,
                                       mean.PMP1.H0, median.BF10, mean.PMP0.H1,
                                       mean.PMP1.H1, eta.BF01, eta.BF10, n2, n1)
     row_result <- row_result + 1
   }
 }
-design_matrix_results <- design_matrixN1[rep(1:nrow(design_matrixN1), each = 3), ]
+design_matrix_after64 <- design_matrixN1[which((design_matrixN1$eff_size == 0.2) & (design_matrixN1$rho > 0.04)), ]
+design_matrix_results <- design_matrix_after64[rep(1:nrow(design_matrix_after64), each = 3), ]
 all_results_N1 <- as.data.frame(cbind(design_matrix_results, all_results_N1))
-colnames(all_results_N1) <- c(names(design_matrixN1), "b", "median.BF01",
+colnames(all_results_N1) <- c(names(design_matrix_after64), "b", "median.BF01",
                               "mean.PMP0.H0", "mean.PMP1.H0", "median.BF10",
                               "mean.PMP0.H1", "mean.PMP1.H1", "eta.BF01",
                               "eta.BF10", "n2.final", "n1.final")
@@ -186,8 +190,8 @@ saveRDS(all_results_N1, file = file.path(results_folder, "all_results_N1.RDS"))
 # Plots ------------------------------------------------------------------------
 ## Bayes factors --------------------
 #rho and bf.threshold=same
-
-ggplot(all_results_N2, aes(median.BF01, color = as.factor(n1), fill = as.factor(n1))) +
+final_results_FindN2 <- readRDS("~/GitHub/CRT-Sample-Size-Determination/scripts/results_SimulationFindN2/final_results_FindN2.RDS")
+ggplot(final_results_FindN2, aes(median.BF01, color = as.factor(n1), fill = as.factor(n1))) +
   geom_histogram(alpha = 0.5, bins = 100) +
   scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
   facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = label_both) +
@@ -195,7 +199,7 @@ ggplot(all_results_N2, aes(median.BF01, color = as.factor(n1), fill = as.factor(
   xlab("Bayes Factor") + ylab("Frequency") #+ 
 #scale_y_log10(breaks = 10^(2:13), labels = trans_format("log10", math_format(10^.x)))
 
-ggplot(all_results_N2, aes(median.BF10, color = as.factor(n1), fill = as.factor(n1))) +
+ggplot(final_results_FindN2, aes(median.BF10, color = as.factor(n1), fill = as.factor(n1))) +
   geom_histogram(alpha = 0.5, bins = 100) +
   scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
   facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = label_both) +
@@ -210,7 +214,7 @@ names(rho_labs) <- c("0.025", "0.05", "0.1")
 eff_size_labs <- c(paste0("\u03B4 0.2"), paste0("\u03B4 0.5"), paste0("\u03B4 0.8"))
 names(eff_size_labs) <- c("0.2", "0.5", "0.8")
 
-ggplot(all_results_N2[all_results_N2$b == 1, ], aes(y = median.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
+ggplot(final_results_FindN2[final_results_FindN2$b == 1, ], aes(y = median.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
   geom_point() + geom_line() +
   scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
   facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
@@ -218,7 +222,7 @@ ggplot(all_results_N2[all_results_N2$b == 1, ], aes(y = median.BF01, x = n2.fina
   xlab("Number of clusters") + ylab("Bayes Factor") + theme(legend.position = "bottom")
 
 # Plot n2, Bayes factor comparing different b
-ggplot(all_results_N2, aes(y = median.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
+ggplot(final_results_FindN2, aes(y = median.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
   geom_point() + geom_line(aes(linetype = as.factor(b))) +
   scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
   facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = label_both) +
@@ -226,7 +230,7 @@ ggplot(all_results_N2, aes(y = median.BF01, x = n2.final, color = as.factor(n1),
   xlab("Number of clusters") + ylab("Bayes Factor")
 
 # Plot n2, Eta comparing different b
-ggplot(all_results_N2[all_results$b == 1, ], aes(y = eta.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
+ggplot(final_results_FindN2, aes(y = eta.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
   geom_point() + geom_line(aes(linetype = as.factor(b))) +
   scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
   facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = label_both) +
@@ -234,12 +238,12 @@ ggplot(all_results_N2[all_results$b == 1, ], aes(y = eta.BF01, x = n2.final, col
   xlab("Number of clusters") + ylab("Eta")
 
 # Save plot with high resolution
-ggsave(filename = "n2BF", path = "results_SimulationFindN2", device='tiff', dpi=400)
-ggsave(filename = "n2BF", path = "results_SimulationFindN2", width = 1070, height = 650, units = "px", device='png', dpi=400)
+ggsave(filename = "n2BF", path = "results_SimulationFindN2", device = 'tiff', dpi = 400)
+ggsave(filename = "n2BF", path = "results_SimulationFindN2", width = 1070, height = 650, units = "px", device = 'png', dpi = 400)
 
 
 ## Final n2: n2,------------------------------------------------------------------------------
-ggplot(all_results_N2[all_results_N2$b == 1, ], aes(x = n1, y = n2.final, color = as.factor(BF_threshold), shape = as.factor(BF_threshold))) +
+ggplot(final_results_FindN2[final_results_FindN2$b == 1, ], aes(x = n1, y = n2.final, color = as.factor(BF_threshold), shape = as.factor(BF_threshold))) +
   geom_point() + geom_line() +
   scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
   facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
@@ -247,7 +251,7 @@ ggplot(all_results_N2[all_results_N2$b == 1, ], aes(x = n1, y = n2.final, color 
        color = "Bayes Factor \nThresholds", shape = "Bayes Factor \nThresholds") +
   xlab("Cluster sizes") + ylab("Number of clusters") + theme(legend.position = "bottom")
 
-ggplot(all_results_N2, aes(x = n1, y = n2.final, color = as.factor(BF_threshold), shape = as.factor(b))) +
+ggplot(final_results_FindN2, aes(x = n1, y = n2.final, color = as.factor(BF_threshold), shape = as.factor(b))) +
   geom_point() + geom_line(aes(linetype = as.factor(b))) +
   scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
   facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
@@ -255,13 +259,27 @@ ggplot(all_results_N2, aes(x = n1, y = n2.final, color = as.factor(BF_threshold)
        color = "Bayes Factor \nThresholds", shape = "Fraction b", linetype = "Fraction b") +
   xlab("Cluster sizes") + ylab("Number of clusters") + theme(legend.position = "bottom")
 
+## Times find N2 ---------------------------------------------------------------------------
+ggplot(final_times_FindN2, aes(y = log(total.time), x = n1, color = as.factor(BF_threshold), shape = as.factor(BF_threshold))) +
+  geom_point() + geom_line() +
+  scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+  facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+  labs(title = "Logarithm of time", color = "Bayes Factor \nThresholds", shape = "Bayes Factor \nThresholds") +
+  xlab("Cluster size") + ylab("Time (min)") + theme(legend.position = "bottom")
+
+ggplot(final_times_FindN2, aes(y = total.time, x = n1, color = as.factor(BF_threshold), shape = as.factor(BF_threshold))) +
+  geom_point() + geom_line() +
+  scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+  facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+  labs(title = "Logarithm of time", color = "Bayes Factor \nThresholds", shape = "Bayes Factor \nThresholds") +
+  xlab("Cluster size") + ylab("Time (min)") + theme(legend.position = "bottom")
 # TABLES -------------------------------------------------------------------------------------------------
 ## Option 1
 library(xtable)
 table_results <- c("rho", "BF_threshold", "n1", "n2.final", "eta.BF10", "eta.BF01")
 round_col <- c("BF_threshold", "n1", "n2.final")
 results_colnames <- c("ICC", "$BF_{thresh}$", "N1", "N2", "$P(BF_{10}>BF_{thresh})$", "$P(BF_{01}>BF_{thresh})$")
-effect.size0.2 <- all_results_FindN2[which(all_results_FindN2$b == 1 & all_results_FindN2$eff_size == 0.2),table_results]
+effect.size0.2 <- final_results_FindN2[which(final_results_FindN2$b == 1 & final_results_FindN2$eff_size == 0.2),table_results]
 effect.size0.2 <- effect.size0.2[order(effect.size0.2$rho, effect.size0.2$BF_threshold, effect.size0.2$n1), ]
 effect.size0.2[, round_col] <- round(effect.size0.2[, round_col], digits = 0)
 colnames(effect.size0.2) <- results_colnames
@@ -271,8 +289,8 @@ for (i in 1:length(table_results)) {
 }
 print(xtable(effect.size0.2), include.rownames = FALSE)
 
-effect.size0.5 <- all_results_FindN2[which(all_results_FindN2$b == 1 & all_results_FindN2$eff_size == 0.5),table_results]
-effect.size0.8 <- all_results_FindN2[which(all_results_FindN2$b == 1 & all_results_FindN2$eff_size == 0.8),table_results]
+effect.size0.5 <- final_results_FindN2[which(final_results_FindN2$b == 1 & final_results_FindN2$eff_size == 0.5),table_results]
+effect.size0.8 <- final_results_FindN2[which(final_results_FindN2$b == 1 & final_results_FindN2$eff_size == 0.8),table_results]
 
 # Option 2
 #rownames(try_tr) <- NULL #To reset the index
@@ -283,13 +301,15 @@ colnames(try_tr) <- c("ICC", "$BF_{thresh}$", "N1", "N2", "$P(BF_>BF_{thresh})$"
 try_tr[1:nrow(try_tr) %% 2 == 0, "$P(BF_>BF_{thresh})$"] <- effect.size0.2$`$P(BF_{01}>BF_{thresh})$`
 try_tr$scenario <- c("H1", "H0")
 nrow_result <- nrow(try_tr)/3
+
 results_new_format <- try_tr[1:nrow_result, 2:ncol(try_tr)]
+
 for (index in 1:2) {
   new_col <- try_tr[((nrow_result*index) + 1):((nrow_result*index) + nrow_result), c("N2", "$P(BF_>BF_{thresh})$")]
-  browser()
   results_new_format <- cbind(results_new_format, new_col)
 }
 results_new_format <- results_new_format[, c(1, 2, 5, 3, 4, 6, 7, 8, 9)]
+results_new_format[, c(5, 7, 9)] <- lapply(results_new_format[, c(5, 7, 9)], function(x) format(x, nsmall = 3))
 print(xtable(results_new_format), include.rownames = FALSE)
 
 

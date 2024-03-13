@@ -257,3 +257,9 @@ ggplot(results_all, aes(y = mean.PMP1.H1, x = n2.after, color = as.factor(n1), s
   xlab("Number of clusters") + ylab("Posterior Model Probabilities")
 
 null_every <- results_all
+
+
+# Sampling plot --------------------------------------
+sampling <- SSD_crt_null_plots(eff_size = 0.5, n1 = 10, n2 = 30, ndatasets = 1000, rho = 0.03, 
+                   BF_thresh = 3, eta = 0.8, fixed = "n2", b_fract = 3, increasing = FALSE,
+                   max = 100, batch_size = 500)
