@@ -562,7 +562,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     
     # Final output -----
     print_results(final_SSD)
-    if (any(singular_warn > 0)) warning("At least one of the fitted models is singular. For more information about singularity see help('issingular').
+    if (any(singular_warn > 0)) warning("At least one of the fitted models is singular. For more information about singularity see help('isSingular').
                                The number of models that are singular can be found in the output object.")
     invisible(final_SSD)
 }
