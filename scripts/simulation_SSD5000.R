@@ -182,12 +182,25 @@ colnames(all_results_N1) <- c(names(design_matrix_after64), "b", "median.BF01",
                               "mean.PMP0.H1", "mean.PMP1.H1", "eta.BF01",
                               "eta.BF10", "n2.final", "n1.final")
 saveRDS(all_results_N1, file = file.path(results_folder, "all_results_N1.RDS"))
+saveRDS(all_results_N1, file = file.path(results_folder, "results_N1from64.RDS"))
 
+## Running times in minutes
+times_findN1 <- matrix(NA, nrow = length(last_rows), ncol = 1)
+row_result_matrix <- 1
+for (row_result in last_rows) {
+  stored_result <- readRDS(paste0(results_folder, "/timeN1Row", row_result, ".RDS")) # I am not sure if it's necessary to store the 
+  times_findN1[row_result_matrix, 1] <- stored_result
+  row_result_matrix <- row_result_matrix + 1
+}
+times_results_N1 <- as.data.frame(cbind(design_matrix_after64, times_findN1))
+colnames(times_results_N1) <- c(names(design_matrix_after64), "total.time")             
+saveRDS(times_results_N1, file = file.path(results_folder, "times_findN1_from64.RDS"))
 
 # all_results_N1: Results for determining n1
 # all_results_N2: Results for determining n2
 
 # Plots ------------------------------------------------------------------------
+
 ## Bayes factors --------------------
 #rho and bf.threshold=same
 final_results_FindN2 <- readRDS("~/GitHub/CRT-Sample-Size-Determination/scripts/results_SimulationFindN2/final_results_FindN2.RDS")
@@ -215,6 +228,7 @@ eff_size_labs <- c(paste0("\u03B4 0.2"), paste0("\u03B4 0.5"), paste0("\u03B4 0.
 names(eff_size_labs) <- c("0.2", "0.5", "0.8")
 
 ggplot(final_results_FindN2[final_results_FindN2$b == 1, ], aes(y = median.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
+ggplot(final_results_FindN1[final_results_FindN1$b == 1, ], aes(y = median.BF01, x = n1.final, color = as.factor(n2), shape = as.factor(n2))) +
   geom_point() + geom_line() +
   scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
   facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
