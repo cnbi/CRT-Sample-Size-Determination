@@ -1,4 +1,14 @@
+# Project file in R
 .Rproj.user
+
+# R history
 .Rhistory
+
+# Data in workspace
 .RData
+
+# Data of user?
 .Ruserdata
+
+# Folder with large data sets
+results/output

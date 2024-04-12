@@ -1,0 +1,292 @@
+---
+title: Finding Number of Clusters
+author: Camila N Barragan I
+format: html
+editor: visual
+---
+
+## *Data*
+
+```{r}
+# Libraries
+library(ggplot2)
+library(dplyr) # For formatting the tables
+library(scales) # For scales in plots
+library(latex2exp)
+library(purrr) # For formatting the tables
+library(plotly)
+library(xtable)
+
+# Data
+final_results_FindN2 <- readRDS("~/GitHub/CRT-Sample-Size-Determination/scripts/results_SimulationFindN2/final_results_FindN2.RDS")
+final_times_FindN2 <- readRDS("~/GitHub/CRT-Sample-Size-Determination/scripts/results_SimulationFindN2/final_times_FindN2.RDS")
+```
+
+## *Results*
+
+### *Values of Bayes factor*
+
+```{r}
+## Change labels
+rho_labs <- c("ICC: 0.025", "ICC: 0.05", "ICC: 0.1")
+names(rho_labs) <- c(0.025, 0.05, 0.1)
+eff_size_labs <- c(paste0("\u03B4 0.2"), paste0("\u03B4 0.5"), paste0("\u03B4 0.8"))
+names(eff_size_labs) <- c(0.2, 0.5, 0.8)
+
+#plot
+ggplot(final_results_FindN2[final_results_FindN2$b == 1, ], aes(y = median.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) + geom_point() + geom_line() + scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") + facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) + labs(title = "Bayes Factor H0 vs H1", color = "Cluster sizes", shape = "Cluster sizes") + xlab("Number of clusters") + ylab("Bayes Factor") + theme(legend.position = "bottom")
+```
+
+*It can be seen in the plot that overall, when the number of clusters is high the median of Bayes factor is high. For small effect sizes are required more number of clusters and, therefore, show larger values of Bayes factor. As expected considering the results from the other simulation, the difference between effect sizes of 0.8 and 0.5 is small and hard to determine using the plot. The ICC has a small effect on the number of clusters and the Bayes factor; increasing the ICC lead to increasing the number of clusters required. However, in this case more number of cluster does not yield larger Bayes factors. Regarding the number of clusters, the larger the clusters sizes the smaller the number of clusters required.*
+
+*In addition to the simple effects of the variables, it can be seen that the required number of clusters is also result of the interaction between the variables. In the scenarios with high ICC and small effect size, the number of clusters required is large. Moreover, in the same scenarios, there is a clear difference in the required number of clusters between the various cluster sizes.*
+
+```{r}
+ggplot(final_results_FindN2[final_results_FindN2$b == 1, ], aes(y = log(median.BF10), x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
+    geom_point() + geom_line() +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+    labs(title = "Bayes Factor H1 vs H0", color = "Cluster sizes", shape = "Cluster sizes") +
+    xlab("Number of clusters") + ylab("log Bayes Factor") + theme(legend.position = "bottom")
+```
+
+*Overall, the values of Bayes factor are larger than comparing null versus informative hypothesis. In comparison to previous results, increasing the effect size produces higher values of Bayes factor and there is a difference based on the value of the effect size. While increasing or decreasing the ICC will produce similar values of Bayes factor. Finally, the number of clusters has a inverse relationship with the number of clusters, however the difference in the Bayes factor seems small.*
+
+```{r}
+ggplot(final_results_FindN2, aes(y = median.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
+    geom_point() + geom_line(aes(linetype = as.factor(b))) +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = label_both) +
+    labs(title = "Bayes Factor H0 vs H1", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
+    xlab("Number of clusters") + ylab("Bayes Factor")
+```
+
+*Overall, the results are similar to the first plot. The difference in this plot is that it is possible to distinguish the results for different fractions of information to specify the prior. As expected, using a bigger fraction of information leads to increasing the number of clusters. Moreover, the cases with bigger fractions show lower values of Bayes factor.It seems that the differences between ICC of 0.05 and 0.025 are small, and this is the same for effect sizes of 0.5 and 0.8.*
+
+```{r}
+ggplot(final_results_FindN2, aes(y = log(median.BF10), x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +
+    geom_point() + geom_line(aes(linetype = as.factor(b))) +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = label_both) +
+    labs(title = "Bayes Factor H1 vs H0", subtitle = "H0:Dintervention=Dcontrol \nH1:Dintervention>Dcontrol") +
+    xlab("Number of clusters") + ylab("log Bayes Factor")
+```
+
+*The Bayes factor comparing hypotheses with inequality versus equality constraints reach higher values. In the illustration can be seen that increasing the effect size lead to higher values of Bayes factor. Whereas regarding ICC can be seen that when it increases the values of Bayes factor are slightly lower. Finally, as it was expected there is no difference based on the frqaction of information (b).*
+
+### *Bayesian Power*
+
+```{r}
+ggplot(final_results_FindN2[final_results_FindN2$b == 1, ], aes(y = eta.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) + geom_point() + geom_line() +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+    labs(title = "Bayes Factor H0 vs H1", color = "Cluster sizes", shape = "Cluster sizes") +
+    xlab("Number of clusters") + ylab("Probability of Bayes factor larger than threshold") + theme(legend.position = "bottom") + geom_hline(yintercept = 0.8)
+```
+
+*In general, there is a tendency of decreasing the probability (power) when the number of clusters increases. The change in the probability is more drastic when the effect size is medium and big; while in the cases where the effect size is small, the probability decreases continuously similar to a linear model. In addition, it can be seen that the power criterion is reached with smaller number of clusters when the effect sizes are of 0.5 and 0.8 compared to 0.2. Again, the effects of ICC are small, thus it is difficult to notice them. And finally, the inverse relation between cluster sizes and number of clusters can be seen.*
+
+*Regarding the interactions, it can be seen in the plot that the differences on the probability when the ICC increases are more notorious when the effect size is small.Likewise, there is a sharper distinction between the different number of clusters when the effect size is small.*
+
+```{r}
+ggplot(final_results_FindN2[final_results_FindN2$b == 1, ], aes(y = eta.BF10, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) +    geom_point() + geom_line() + scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") + facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) + labs(title = "Bayes Factor H1 vs H0", color = "Cluster sizes", shape = "Cluster sizes") + xlab("Number of clusters") + ylab("Probability of Bayes factor larger than threshold") + theme(legend.position = "bottom") + geom_hline(yintercept = 0.8)
+```
+
+*The tendency is completely different in this case. With exception of the cases with small effect sizes, there is a tendency to increase the probability when the number of clusters increase. When the effect size is small, increasing the number of clusters does not change the probability, and if there is a change, this is insignificant.There is a clear difference in the probability when the effect size changes, while when the effect size of 0.2 the shape is close to a horizontal line, when the effect size is 0.5 the shape is also to a line but it seems to represent a positive relationship,a nd finally, when the effect size is large, the shape is similar to a logarithmic distribution reaching the maximum probability. In relation to the ICC, it seems that there is no clear difference in the probability, but larger number of clusters are needed. Regarding the cluster sizes, the inverse relationship with number of clusters is maintained and, in general, it seems that with smaller number of clusters, the probabilities are lower.*
+
+#### *Comparing b*
+
+```{r}
+ggplot(final_results_FindN2, aes(y = eta.BF01, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) + geom_point() + geom_line(aes(linetype = as.factor(b))) +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+    labs(title = "Null hypothesis true", linetype = "Fraction b", color = "Cluster sizes", shape = "Cluster sizes") + xlab("Number of clusters") + ylab("Probability of Bayes factor larger than threshold") + geom_hline(yintercept = 0.8) + theme(legend.position = "bottom") + geom_hline(yintercept = 0.8)
+```
+
+*In the plot there is a clear difference in the shape when the effect size is small (0.2), the shape varies depending on the fraction of information. When the fraction of information is 1 or 2 the shape is a continuous decrease similar to a exponential decay process. When the fraction of information is 3, the line still exhibits a decreasing trend with a curvature similar to a logistic function. In the other effect sizes there is no clear distinction between the different fractions of information. Overall, in the other effect sizes the shape are similar to a logistic function, which means that increasing the number of clusters leads to lower probability and there is no difference in the b fraction.*
+
+```{r}
+ggplot(final_results_FindN2, aes(y = eta.BF10, x = n2.final, color = as.factor(n1), shape = as.factor(n1))) + geom_point() + geom_line(aes(linetype = as.factor(b))) +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+    labs(title = "Alternative hypothesis is true", linetype = "Fraction b", color = "Cluster sizes", shape = "Cluster sizes") + xlab("Number of clusters") + ylab("Probability of Bayes factor larger than threshold") + geom_hline(yintercept = 0.8) + theme(legend.position = "bottom")
+```
+
+*This plot shows that with the largest fraction of information larger number of clusters are necessary and it reaches higher probabilities.*
+
+```{r}
+library(plotly)
+ggplotly()
+```
+
+### *Final Sample Sizes*
+
+```{r}
+ggplot(final_results_FindN2, aes(x = n1, y = n2.final, color = as.factor(BF_threshold), shape = as.factor(BF_threshold))) +
+    geom_point() + geom_line(aes(linetype = as.factor(b))) +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+    labs(title = "Determining Cluster Sizes in Function of Number of Cluster, Bayes Factor \nThresholds, Effect sizes,and Intraclass Correlations",  
+         color = "Bayes Factor \nThresholds", shape = "Bayes Factor \nThresholds", linetype = "Fraction b") + xlab("Cluster sizes") + ylab("Number of clusters") + theme(legend.position = "bottom")
+```
+
+*The plot show that there is a trade-off between the number of clusters and cluster sizes. It is also clear that increasing the threshold will increase the required number of clusters. Likewise, increasing the fraction of information produces increasing the required number of clusters.It is interesting to note that with larger thresholds, the biggest the difference in the number of clusters when the fraction of information changes. As I have previously mention, the sample size do not vary between effect size 0.5 and 0.8, whereas in the case of effect size of 0.2 has a different pattern. When the effect size is small the difference of number of clusters between numerous thresholds and fractions of information are small, and when increases the cluster size this difference decreases.*
+
+### *Time*
+
+```{r}
+ggplot(final_times_FindN2, aes(y = (total.time/60), x = n1, color = as.factor(BF_threshold), shape = as.factor(BF_threshold))) + geom_point() + geom_line() + scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") + facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+    labs(title = "Running time", color = "Bayes Factor \nThresholds", shape = "Bayes Factor \nThresholds") + xlab("Cluster sizes") + ylab("Time (hours)") + theme(legend.position = "bottom")
+```
+
+*As expected, the highest running time occurs when the cluster sizes are small (5). However, I was not expecting to see that for effect size of 0.5 and 0.8, the cases with largest running time corresponds to cases with threshold of 3. In addition, it is possible to notice that when the effect size is small, the running time increases, specially for cases with the largest thresholds and medium to low ICC.*
+
+## *Tables*
+
+```{r}
+table_results <- c("rho", "eff_size", "BF_threshold", "n1", "n2.final", "eta.BF10", "eta.BF01")
+effect.size0.2 <- final_results_FindN2[which(final_results_FindN2$b == 1 & final_results_FindN2$eff_size == 0.2),table_results]
+effect.size0.2 <- effect.size0.2[order(effect.size0.2$rho, effect.size0.2$BF_threshold, effect.size0.2$n1), ]
+results_colnames <- c("ICC", "$BF_{thresh}$", "N1", "N2", "$P(BF_{10}>BF_{thresh})$", "$P(BF_{01}>BF_{thresh})$")
+colnames(effect.size0.2) <- results_colnames
+
+```
+
+```{r}
+#Filter table
+table_results <- c("rho", "eff_size", "BF_threshold", "n1", "n2.final", "eta.BF10", "eta.BF01")
+results_colnames <- c("ICC", "Effect Size", "$BF_{thresh}$", "N1", "N2", "$P(BF_{10}>BF_{thresh})$", "$P(BF_{01}>BF_{thresh})$")
+filtered_df <- final_results_FindN2 %>% filter(b == 1 & (eff_size == 0.2 | eff_size == 0.5)) %>% select(all_of(table_results)) %>% arrange(rho, eff_size, BF_threshold, n1) %>% rename_with(~results_colnames, all_of(table_results))
+
+# Create another row for H1 and H0
+final_table <- filtered_df[rep(1:nrow(filtered_df), each = 2), ]
+final_table[1:nrow(final_table) %% 2 == 0, ] <- NA
+final_table <- final_table[, 1:(ncol(filtered_df) - 1)]
+colnames(final_table) <- c("ICC", "Effect Size", "$BF_{thresh}$", "N1", "N2", "$P(BF_>BF_{thresh})$")
+final_table[1:nrow(final_table) %% 2 == 0, "$P(BF_>BF_{thresh})$"] <- filtered_df$`$P(BF_{01}>BF_{thresh})$`
+final_table$scenario <- c("H1", "H0")
+
+# Move the ICC values to columns
+nrow_result <- nrow(final_table)/3
+results_new_format <- final_table[1:nrow_result, 2:ncol(final_table)]
+for (index in 1:2) {
+    new_col <- final_table[((nrow_result*index) + 1):(nrow_result * (index + 1)), c("N2", "$P(BF_>BF_{thresh})$")]
+    results_new_format <- cbind(results_new_format, new_col)
+}
+names(results_new_format) <- c("Effect Size", "$BF_{thresh}$", "N1", "N2.ICC0025.eff02", "$P(BF_>BF_{thresh})$.1", "Scenario", "N2.ICC005.eff02", "$P(BF_>BF_{thresh})$.2", "N2.ICC01.eff02", "$P(BF_>BF_{thresh})$.3")
+
+# Create new columns and move the values from different effect sizes to columns
+nrow_result <- nrow(results_new_format)/2
+final_table_modified <- results_new_format[1:nrow_result, 2:ncol(results_new_format)]
+new_cols <- results_new_format[(nrow_result + 1):(nrow_result * 2), c("N2.ICC0025.eff02", "$P(BF_>BF_{thresh})$.1", "N2.ICC005.eff02", "$P(BF_>BF_{thresh})$.2","N2.ICC01.eff02", "$P(BF_>BF_{thresh})$.3")]
+final_table_modified <- cbind(final_table_modified, new_cols)
+
+#reorder columns
+final_table_modified <- final_table_modified[, c(1, 2, 5, 3, 4, 10, 11, 6, 7, 12, 13, 8, 9, 14, 15)]
+
+# change format
+final_table_formatted <- final_table_modified %>%
+    # Format columns 5, 7, 9, 11 to three decimals 
+  mutate_at(vars(5, 7, 9, 11, 13, 15), ~ format(round(as.numeric(.), 3), nsmall = 3))  %>% 
+    # Convert columns 4, 5, 6, 7 to integers
+  mutate_at(vars(1, 2, 4, 6, 8, 10, 12, 14), ~ if_else(!is.na(.), as.integer(.), NA_integer_))
+
+# Print
+print(xtable(final_table_formatted), include.rownames = FALSE)
+```
+
+```{r}
+try_tr <- effect.size0.2[rep(1:nrow(effect.size0.2), each = 2), ]
+try_tr[1:nrow(try_tr) %% 2 == 0, ] <- NA
+try_tr <- try_tr[, 1:ncol(effect.size0.2) - 1]
+colnames(try_tr) <- c("ICC", "$BF_{thresh}$", "N1", "N2", "$P(BF_>BF_{thresh})$")
+try_tr[1:nrow(try_tr) %% 2 == 0, "$P(BF_>BF_{thresh})$"] <- effect.size0.2$`$P(BF_{01}>BF_{thresh})$`
+try_tr$scenario <- c("H1", "H0")
+nrow_result <- nrow(try_tr)/3
+
+results_new_format <- try_tr[1:nrow_result, 2:ncol(try_tr)]
+
+for (index in 1:2) {
+  new_col <- try_tr[((nrow_result*index) + 1):((nrow_result*index) + nrow_result), c("N2", "$P(BF_>BF_{thresh})$")]
+  results_new_format <- cbind(results_new_format, new_col)
+}
+results_new_format <- results_new_format[, c(1, 2, 5, 3, 4, 6, 7, 8, 9)]
+results_new_format[, c(5, 7, 9)] <- lapply(results_new_format[, c(5, 7, 9)], function(x) format(x, nsmall = 3))
+print(xtable(results_new_format), include.rownames = FALSE)
+```
+
+```{r}
+effect.size0.2 <- final_results_FindN2[which(final_results_FindN2$b == 2 & final_results_FindN2$eff_size == 0.2),table_results]
+effect.size0.2 <- effect.size0.2[order(effect.size0.2$rho, effect.size0.2$BF_threshold, effect.size0.2$n1), ]
+results_colnames <- c("ICC", "$BF_{thresh}$", "N1", "N2", "$P(BF_{10}>BF_{thresh})$", "$P(BF_{01}>BF_{thresh})$")
+colnames(effect.size0.2) <- results_colnames
+try_tr <- effect.size0.2[rep(1:nrow(effect.size0.2), each = 2), ]
+try_tr[1:nrow(try_tr) %% 2 == 0, ] <- NA
+try_tr <- try_tr[, 1:ncol(effect.size0.2) - 1]
+colnames(try_tr) <- c("ICC", "$BF_{thresh}$", "N1", "N2", "$P(BF_>BF_{thresh})$")
+try_tr[1:nrow(try_tr) %% 2 == 0, "$P(BF_>BF_{thresh})$"] <- effect.size0.2$`$P(BF_{01}>BF_{thresh})$`
+try_tr$scenario <- c("H1", "H0")
+nrow_result <- nrow(try_tr)/3
+
+results_new_format <- try_tr[1:nrow_result, 2:ncol(try_tr)]
+
+for (index in 1:2) {
+  new_col <- try_tr[((nrow_result*index) + 1):((nrow_result*index) + nrow_result), c("N2", "$P(BF_>BF_{thresh})$")]
+  results_new_format <- cbind(results_new_format, new_col)
+}
+results_new_format <- results_new_format[, c(1, 2, 5, 3, 4, 6, 7, 8, 9)]
+results_new_format[, c(5, 7, 9)] <- lapply(results_new_format[, c(5, 7, 9)], function(x) format(x, nsmall = 3))
+print(xtable(results_new_format), include.rownames = FALSE)
+```
+
+```{r}
+table_results <- c("rho", "BF_threshold", "n1", "n2.final", "eta.BF10", "eta.BF01")
+effect.size0.5 <- final_results_FindN2[which(final_results_FindN2$b == 1 & final_results_FindN2$eff_size == 0.5),table_results]
+effect.size0.5 <- effect.size0.5[order(effect.size0.5$rho, effect.size0.5$BF_threshold, effect.size0.5$n1), ]
+results_colnames <- c("ICC", "$BF_{thresh}$", "N1", "N2", "$P(BF_{10}>BF_{thresh})$", "$P(BF_{01}>BF_{thresh})$")
+colnames(effect.size0.5) <- results_colnames
+#---
+try_tr <- effect.size0.5[rep(1:nrow(effect.size0.5), each = 2), ]
+try_tr[1:nrow(try_tr) %% 2 == 0, ] <- NA
+try_tr <- try_tr[, 1:ncol(effect.size0.5) - 1]
+colnames(try_tr) <- c("ICC", "$BF_{thresh}$", "N1", "N2", "$P(BF_>BF_{thresh})$")
+try_tr[1:nrow(try_tr) %% 2 == 0, "$P(BF_>BF_{thresh})$"] <- effect.size0.5$`$P(BF_{01}>BF_{thresh})$`
+try_tr$scenario <- c("H1", "H0")
+nrow_result <- nrow(try_tr)/3
+
+results_new_format <- try_tr[1:nrow_result, 2:ncol(try_tr)]
+
+for (index in 1:2) {
+  new_col <- try_tr[((nrow_result*index) + 1):((nrow_result*index) + nrow_result), c("N2", "$P(BF_>BF_{thresh})$")]
+  results_new_format <- cbind(results_new_format, new_col)
+}
+results_new_format <- results_new_format[, c(1, 2, 5, 3, 4, 6, 7, 8, 9)]
+results_new_format[, c(5, 7, 9)] <- lapply(results_new_format[, c(5, 7, 9)], function(x) format(x, nsmall = 3))
+print(xtable(results_new_format), include.rownames = FALSE)
+```
+
+```{r}
+table_results <- c("rho", "BF_threshold", "n1", "n2.final", "eta.BF10", "eta.BF01")
+effect.size0.5 <- final_results_FindN2[which(final_results_FindN2$b == 2 & final_results_FindN2$eff_size == 0.5),table_results]
+effect.size0.5 <- effect.size0.5[order(effect.size0.5$rho, effect.size0.5$BF_threshold, effect.size0.5$n1), ]
+results_colnames <- c("ICC", "$BF_{thresh}$", "N1", "N2", "$P(BF_{10}>BF_{thresh})$", "$P(BF_{01}>BF_{thresh})$")
+colnames(effect.size0.5) <- results_colnames
+#---
+try_tr <- effect.size0.5[rep(1:nrow(effect.size0.5), each = 2), ]
+try_tr[1:nrow(try_tr) %% 2 == 0, ] <- NA
+try_tr <- try_tr[, 1:ncol(effect.size0.5) - 1]
+colnames(try_tr) <- c("ICC", "$BF_{thresh}$", "N1", "N2", "$P(BF_>BF_{thresh})$")
+try_tr[1:nrow(try_tr) %% 2 == 0, "$P(BF_>BF_{thresh})$"] <- effect.size0.5$`$P(BF_{01}>BF_{thresh})$`
+try_tr$scenario <- c("H1", "H0")
+nrow_result <- nrow(try_tr)/3
+
+results_new_format <- try_tr[1:nrow_result, 2:ncol(try_tr)]
+
+for (index in 1:2) {
+  new_col <- try_tr[((nrow_result*index) + 1):((nrow_result*index) + nrow_result), c("N2", "$P(BF_>BF_{thresh})$")]
+  results_new_format <- cbind(results_new_format, new_col)
+}
+results_new_format <- results_new_format[, c(1, 2, 5, 3, 4, 6, 7, 8, 9)]
+results_new_format[, c(5, 7, 9)] <- lapply(results_new_format[, c(5, 7, 9)], function(x) format(x, nsmall = 3))
+print(xtable(results_new_format), include.rownames = FALSE)
+```

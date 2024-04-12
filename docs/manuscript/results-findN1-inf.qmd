@@ -1,0 +1,131 @@
+---
+title: "Determining Cluster Size with Informative Hypotheses"
+author: "CNBI"
+format: html
+editor: visual
+---
+
+## Data
+
+```{r}
+# Libraries
+library(ggplot2)
+library(scales) # For scales in plots
+library(purrr) # For formatting the tables
+library(plotly)
+library(dplyr)
+library(xtable)
+
+# Data
+final_results_FindN1 <- readRDS("~/GitHub/CRT-Sample-Size-Determination/scripts/results/Inform/final_results_FindN1.RDS")
+final_times_findN1 <- readRDS("~/GitHub/CRT-Sample-Size-Determination/scripts/results/Inform/final_times_findN1.RDS")
+```
+
+## Results
+
+### Values of Bayes factor
+
+```{r}
+## Change labels
+rho_labs <- c("ICC: 0.025", "ICC: 0.05", "ICC: 0.1")
+names(rho_labs) <- c(0.025, 0.05, 0.1)
+eff_size_labs <- c(paste0("\u03B4 0.2"), paste0("\u03B4 0.5"), paste0("\u03B4 0.8"))
+names(eff_size_labs) <- c(0.2, 0.5, 0.8)
+
+#plot
+ggplot(final_results_FindN1, aes(y = log(median.BF12), x = n1.final, color = as.factor(n2), shape = as.factor(n2))) +
+    geom_point() + geom_line() +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+    labs(title = "Bayes Factor H1 vs H2", color = "Number of clusters", shape = "Number of clusters") +
+    xlab("Cluster sizes") + ylab("log Bayes Factor") + theme(legend.position = "bottom")
+```
+
+The points represent different thresholds. It can be seen that the variation between the different thresholds is small. In addition, it is possible to see that the number of clusters behave as expected and likewise with the ICC: higher values produce higher values of Bayes factor. It is similar the effect with different values of effect size, however it is interesting that when the effect size is small the difference in the Bayes factor is small regardless of the ICC and the number of clusters. In general, for all scenarios the smallest cluster size is required, with exception of the scenarios with the higher threshold and lowest number of clusters.
+
+```{r}
+ggplotly()
+```
+
+### Bayesian Power
+
+```{r}
+ggplot(final_results_FindN1, aes(y = eta.BF12, x = n1.final, color = as.factor(n2), shape = as.factor(n2))) + geom_point() + geom_line() +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+    labs(title = "Bayes Factor H1 vs H2", color = "Number of clusters", shape = "Number of clusters") +
+    xlab("Cluster sizes") + ylab("Probability of Bayes factor larger than threshold") + theme(legend.position = "bottom")
+```
+
+Overall, with the minimum cluster size is possible to reach the maximum probability for effect sizes of 0.5 and 0.8, regardless of the number of clusters, ICC and threshold. On the other hand, when the effect size is small, the probability varies depending on the number of clusters and ICC. It is also important to note that for the smallest effect size, the required cluster size is larger than six when the number of clusters is 30, and it increases as the ICC increases.
+
+```{r}
+ggplotly()
+```
+
+### Final Sample Size
+
+```{r}
+ggplot(final_results_FindN1, aes(x = n2, y = n1.final, color = as.factor(BF_threshold), shape = as.factor(BF_threshold))) +
+    geom_point() + geom_line() +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+    labs(title = "Determining Cluster Sizes in Function of Number of Cluster, Bayes Factor \nThresholds, Effect sizes,and Intraclass Correlations",  
+         color = "Bayes Factor \nThresholds", shape = "Bayes Factor \nThresholds") + xlab("Number of clusters") + ylab("Cluster sizes") + theme(legend.position = "bottom")
+```
+
+It is possible to determine that indeed for effect sizes of 0.5 and 0.8, the required cluster size is the minimum regardless of the number of clusters, ICC, and number of clusters. In comparison, when the effect size is 0.2 and the threshold is 5, the required cluster size increases as the ICC increases, whereas the other values of threshold do not show the same pattern.
+
+### Running Time
+
+```{r}
+ggplot(final_times_findN1, aes(y = total.time, x = n2, color = as.factor(BF_threshold), shape = as.factor(BF_threshold))) + geom_point() + geom_line() + scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") + facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+    labs(title = "Running time", color = "Bayes Factor \nThresholds", shape = "Bayes Factor \nThresholds") + xlab("Number of clusters") + ylab("Time (minutes)") + theme(legend.position = "bottom")
+```
+
+In most scenarios the longest running time corresponds to scenarios with the higher threshold. Moreover, the running time increases when the number of clusters increases. However, in the case of low ICC, the scenarios with threshold of 3 have the longest running time.
+
+# Paper
+
+```{r}
+ggplot(final_results_FindN1[which(final_results_FindN1$eff_size == 0.2 | final_results_FindN1$eff_size == 0.5),], aes(x = n2, y = n1.final, color = as.factor(BF_threshold), shape = as.factor(BF_threshold))) +
+    geom_point() + geom_line() +
+    scale_color_brewer(palette = "Dark2") + scale_fill_brewer(palette = "Dark2") +
+    facet_grid(rows = vars(rho), cols = vars(eff_size), labeller = labeller(rho = rho_labs, eff_size = eff_size_labs)) +
+    labs(color = "Bayes Factor \nThresholds", shape = "Bayes Factor \nThresholds") + xlab("Number of clusters") + ylab("Cluster sizes") + theme(legend.position = "bottom")
+```
+
+```{r}
+# final_results_FindN1 <- final_results_FindN1 %>% mutate(eta.BF21 = 1 - eta.BF12)
+
+#Filter table
+table_results <- c("rho", "eff_size", "BF_threshold", "n2.final", "n1.final", "eta.BF12")
+results_colnames <- c("ICC", "Effect Size", "$BF_{thresh}$", "N2", "N1", "$P(BF_{12}>BF_{thresh})$")
+filtered_df <- final_results_FindN1 %>% filter(eff_size == 0.2 | eff_size == 0.5) %>% select(all_of(table_results)) %>% arrange(rho, eff_size, BF_threshold, n2.final) %>% rename_with(~results_colnames, all_of(table_results))
+
+# Move the ICC values to columns
+nrow_result <- nrow(filtered_df)/3
+results_new_format <- filtered_df[1:nrow_result, 2:ncol(filtered_df)]
+for (index in 1:2) {
+    new_col <- filtered_df[((nrow_result*index) + 1):(nrow_result * (index + 1)), c("N1", "$P(BF_{12}>BF_{thresh})$")]
+    results_new_format <- cbind(results_new_format, new_col)
+}
+# results_new_format <- results_new_format[ , -6]
+names(results_new_format) <- c("Effect Size", "$BF_{thresh}$", "N2", "N1.ICC0025.eff02", "$P(BF_>BF_{thresh})$.1", "N1.ICC005.eff02", "$P(BF_>BF_{thresh})$.2", "N1.ICC01.eff02", "$P(BF_>BF_{thresh})$.3")
+
+# Create new columns and move the values from different effect sizes to columns
+nrow_result <- nrow(results_new_format)/2
+final_table_modified <- results_new_format[1:nrow_result, 2:ncol(results_new_format)]
+new_cols <- results_new_format[(nrow_result + 1):(nrow_result * 2), c("N1.ICC0025.eff02", "$P(BF_>BF_{thresh})$.1", "N1.ICC005.eff02", "$P(BF_>BF_{thresh})$.2", "N1.ICC01.eff02", "$P(BF_>BF_{thresh})$.3")]
+final_table_modified <- cbind(final_table_modified, new_cols)
+
+#reorder columns
+final_table_modified <- final_table_modified[, c(1,2,3,4,9,10,5,6,11,12,7,8,13,14)]
+
+# change format
+final_table_formatted <- final_table_modified %>%
+  mutate_at(vars(4, 6, 8, 10,12, 14), ~ format(round(as.numeric(.), 3), nsmall = 3))  # Format columns 5, 7, 9, 11 to three decimals
+
+# Print
+print(xtable(final_table_formatted), include.rownames = FALSE)
+```
