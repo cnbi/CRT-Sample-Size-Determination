@@ -6,12 +6,12 @@ The following graph displays the organization of the files and folders related t
 -	**docs**
       -	**manuscript** – manuscript source and biblatex with all the references
 -	**results**
-   + **figures** – Illustrations used in the manuscript. 
-   + **simulation results** – Data sets with the simulation results.
+      -	**figures** – Illustrations used in the manuscript.
+      -	**simulation results** – Data sets with the simulation results.
 -	**scripts**
-   + Functions and scripts with the simulation
-   + **plots** – Scripts used to create plots for presentations.
-   + **performance** – Scripts for profiling the functions created.
+      -	Functions and scripts with the simulation
+      -	**plots** – Scripts used to create plots for presentations.
+      -	**performance** – Scripts for profiling the functions created.
 -	CITATION.md
 -	LICENSE
 -	README.md
