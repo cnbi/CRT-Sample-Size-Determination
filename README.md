@@ -4,7 +4,7 @@ This is a research compendium containing all the scripts, manuscript, and illust
 ## Repository Structure
 The following graph displays the organization of the files and folders related to this research study:
 -	**docs**
-   + **manuscript** – manuscript source and biblatex with all the references
+-	   **manuscript** – manuscript source and biblatex with all the references
 -	**results**
    + **figures** – Illustrations used in the manuscript. 
    + **simulation results** – Data sets with the simulation results.
