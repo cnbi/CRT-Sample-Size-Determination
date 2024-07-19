@@ -7,7 +7,7 @@ The following graph displays the organization of the files and folders related t
       -	**manuscript** – manuscript source and biblatex with all the references
 -	**results**
       -	**figures** – Illustrations used in the manuscript.
-      -	**simulation results** – Data sets with the simulation results.
+      -	**simulation results** – Data sets with simulation results.
 -	**scripts**
       -	Functions and scripts with the simulation
       -	**plots** – Scripts used to create plots for presentations.
