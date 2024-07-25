@@ -1,4 +1,4 @@
-################# PRINT RESULTS #############################
+############################## PRINT RESULTS #################################
 
 print_results <- function(object_result) {
     title <- "Final sample size"
@@ -7,7 +7,7 @@ print_results <- function(object_result) {
     cat(row, "\n")
     if (object_result[[length(object_result)]] == "Inequalities") {   # Print for informative hypotheses
         cat("Hypotheses:", "\n")
-        cat("    H1:", object_result[[5]][[1]], "\n") #Change 5 to 2
+        cat("    H1:", object_result[[5]][[1]], "\n")
         cat("    H2:", object_result[[5]][[2]], "\n")
         cat("Using cluster size = ", object_result$n1, " and number of clusters = ", object_result$n2, "\n")
         cat("P (BF.12 > ", object_result[[6]], " | H1) = ", object_result$Proportion.BF12, "\n")

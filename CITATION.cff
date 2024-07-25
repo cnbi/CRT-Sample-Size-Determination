@@ -4,17 +4,33 @@
 cff-version: 1.2.0
 title: CRT-Sample-Size-Determination
 message: >-
-  If you use this dataset, please cite it using the metadata
+  If you use this software, please cite it using the metadata
   from this file.
-type: dataset
+doi: 
 authors:
   - given-names: Camila Natalia
     family-names: Barragan Ibañez
     email: cn.barragan.ibanez@gmail.com
     orcid: 'https://orcid.org/0000-9000-1529-7974'
+  - given-names: Mirjam
+    family-names: Moerbeek
+    email: m.moerbeek@uu.nl
+    orcid: 'https://orcid.org/0000-0001-5537-1237'
 repository-code: 'https://github.com/cnbi/CRT-Sample-Size-Determination'
 url: 'https://github.com/cnbi/CRT-Sample-Size-Determination'
-abstract: >-
+prefered-citation:
+  type: article
+  doi: https://osf.io/preprints/psyarxiv/kcz7v
+  authors:
+  - given-names: Camila Natalia
+    family-names: Barragan Ibañez
+    email: cn.barragan.ibanez@gmail.com
+    orcid: 'https://orcid.org/0000-9000-1529-7974'
+  - given-names: Mirjam
+    family-names: Moerbeek
+    email: m.moerbeek@uu.nl
+    orcid: 'https://orcid.org/0000-0001-5537-1237'
+  abstract: >-
   This is a research compendium containing all the scripts,
   manuscript, and illustrations used in the project “Sample
   Size Determination for Cluster Randomised Trials with the
@@ -22,7 +38,7 @@ abstract: >-
   method and tools for sample size determination of cluster
   randomised trials when using the Approximated Adjusted
   Fractional Bayes Factor for hypothesis testing.
-keywords:
+  keywords:
   - Bayes factor
   - Sample size determination
   - Cluster randomised trial

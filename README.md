@@ -9,12 +9,14 @@ The following graph displays the organization of the files and folders related t
       -	**figures** – Illustrations used in the manuscript.
       -	**simulation results** – Data sets with simulation results.
 -	**scripts**
-      -	Functions and scripts with the simulation
+      -	Functions
+      -	Scripts with simulations
       -	**plots** – Scripts used to create plots for presentations.
       -	**performance** – Scripts for profiling the functions created.
--	CITATION.md
+-	CITATION.md - 
 -	LICENSE
 -	README.md
+-	CITATION.cff - Citation metadata for this repository citation.
 
 ## R package
 This project is part of a bigger project named “Bayesian sample size calculation for trials with multilevel data”. All the functions developed to determine the sample size for cluster randomised trials are available in the R package [SSD_Bayes_ML]( https://github.com/ulrichlosener/SSD_Bayes_ML)
@@ -24,7 +26,22 @@ In the manuscript can be seen a fraction of the simulation results given the lim
 [Bayesian Sample Size Determination: Cluster Randomised Trials](https://utrecht-university.shinyapps.io/BayesSamplSizeDet-CRT/)
 
 ## Citing
-UPCOMING
+Citing repository:
+
+Citing article:
+**BibTex**
+@misc{barragan-ibanez_moerbeek_2024,
+ title={Method for Sample Size Determination for Cluster-Randomized Trials Using the Bayes Factor},
+ url={osf.io/preprints/psyarxiv/kcz7v},
+ DOI={10.31234/osf.io/kcz7v},
+ publisher={PsyArXiv},
+ author={Barragan-Ibanez, Camila N and Moerbeek, Mirjam},
+ year={2024},
+ month={Jul}
+}
+
+**APA**
+Barragan-Ibanez, C. N., & Moerbeek, M. (2024, July 7). Method for Sample Size Determination for Cluster-Randomized Trials Using the Bayes Factor. https://doi.org/10.31234/osf.io/kcz7v
 
 ## License
 This project is licensed under the terms of the [GNU GPLv3](/LICENSE)

@@ -21,8 +21,8 @@ library(xtable)
 ## Data
 
 ```{r}
-final_results_FindN1 <- readRDS("~/GitHub/CRT-Sample-Size-Determination/scripts/results_SimulationFindN1/final_results_FindN1.RDS")
-final_times_FindN1 <- readRDS("~/GitHub/CRT-Sample-Size-Determination/scripts/results_SimulationFindN1/final_times_FindN1.RDS")
+final_results_FindN1 <- readRDS("~/GitHub/CRT-Sample-Size-Determination/results/output/results_SimulationFindN1_null/final_results_FindN1.RDS")
+final_times_FindN1 <- readRDS("~/GitHub/CRT-Sample-Size-Determination/results/output/results_SimulationFindN1_null/final_times_FindN1.RDS")
 ```
 
 # Results
@@ -213,10 +213,11 @@ filtered_df <- final_results_FindN1 %>% filter(b == 1 & (eff_size == 0.2 | eff_s
 # Create another row for H1 and H0
 final_table <- filtered_df[rep(1:nrow(filtered_df), each = 2), ]
 final_table[1:nrow(final_table) %% 2 == 0, ] <- NA
-final_table <- final_table[, 1:(ncol(filtered_df) - 1)]
+#final_table <- final_table[, 1:(ncol(filtered_df) - 1)]
+final_table <- final_table[, c(1:5, 7)] #Exlude BF10
 colnames(final_table) <- c("ICC", "Effect Size", "$BF_{thresh}$", "N2", "N1", "$P(BF_>BF_{thresh})$")
-final_table[1:nrow(final_table) %% 2 == 0, "$P(BF_>BF_{thresh})$"] <- filtered_df$`$P(BF_{01}>BF_{thresh})$`
-final_table$scenario <- c("H1", "H0")
+final_table[1:nrow(final_table) %% 2 == 0, "$P(BF_>BF_{thresh})$"] <- filtered_df$`$P(BF_{10}>BF_{thresh})$`
+final_table$scenario <- c("H0", "H1")
 
 # Move the ICC values to columns
 nrow_result <- nrow(final_table)/3

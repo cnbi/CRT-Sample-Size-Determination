@@ -46,7 +46,6 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
     condition_met <- FALSE          #Indication we met the power criteria.
     ultimate_sample_sizes <- FALSE            #Indication that we found the required sample size.
     results_H1 <- matrix(NA, nrow = ndatasets, ncol = 4)
-    b <- 1
     
     # Binary search start ------------------------------------------------------
     if (fixed == "n1") {
@@ -88,7 +87,6 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
         
         #Evaluation of condition -------------------------------------------
         # Proportion
-        #browser()
         prop_BF12 <- length(which(results_H1[, "BF.12"] > BF_thresh)) / ndatasets
         # Evaluation
         ifelse(prop_BF12 > eta, condition_met <- TRUE, condition_met <- FALSE)
@@ -108,7 +106,7 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
                 # Adjust higher bound when there is a ceiling effect
                 if (high + n2 == high * 2) {
                     low <- n2                         #lower bound
-                    #Set the higher bound based on the previous high or the maximum
+                    # Set the higher bound based on the previous high or the maximum
                     if (previous_high > 0) {
                         high <- previous_high
                     } else {
@@ -125,7 +123,7 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
                 # Adjust higher bound when there is a ceiling effect
                 if (high + n1 == high * 2) {
                     low <- n1                        #lower bound
-                    #Set the higher bound based on the previous high or the maximum
+                    # Set the higher bound based on the previous high or the maximum
                     if (previous_high > 0) {
                         high <- previous_high
                     } else {
@@ -144,20 +142,21 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
                 # Eta is close enough to the desired eta
                 if (current_eta - eta < 0.1) {
                     if (n2 - low == 2) {
-                        ultimate_sample_sizes = TRUE
+                        ultimate_sample_sizes <- TRUE
                     } else {
                         # Decreasing with small steps to find the ultimate number of clusters
                         low <- low                         #lower bound
-                        n2 <- n2 - 2 
-                        high <- (n2*2) - low
+                        n2 <- n2 - 2
+                        high <- (n2 * 2) - low
                         ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
                         if (n2 < 30) warning("The number of groups is less than 30.
                                                  This may cause problems in convergence and singularity.")
-                        print("Lowering with baby steps") # Eliminate late
                     }
+                    
                 } else if (previous_eta == current_eta && n2 - low == 2) {
                     # If there is no change in eta and the lower bound is close to the middle point
                     ultimate_sample_sizes = TRUE
+                    
                 } else {
                     # Decreasing to find the ultimate number of clusters
                     low <- low                         #lower bound
@@ -166,25 +165,27 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
                     ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1)
                     if (n2 < 30) warning("The number of groups is less than 30.
                                              This may cause problems in convergence and singularity.")
-                    print("Lowering") # Eliminate later
                 }
             } else if (fixed == "n2") {
                 # Eta is close enough to the desired eta
                 if (current_eta - eta < 0.1) {
                     if (n1 - low == 2) {
-                        ultimate_sample_sizes = TRUE
+                        ultimate_sample_sizes <- TRUE
+                        
                     } else {
                         # Decreasing with small steps to find the ultimate number of clusters
-                        low <- low                         #lower bound
+                        low <- low                     #lower bound
                         n1 <- n1 - 1 
                         high <- (n1*2) - low
                         if (n2 < 30) warning("The number of groups is less than 30.
                                                  This may cause problems in convergence and singularity.")
                         print("Lowering with baby steps") # Eliminate late
                     }
+                    
                 } else if (current_eta == previous_eta && n1 - low == 1) {
                     # If there is no change in eta and the lower bound is close to the middle point
-                    ultimate_sample_sizes = TRUE
+                    ultimate_sample_sizes <- TRUE
+                    
                 } else {
                     # Decreasing the cluster size to find the ultimate sample size
                     low <- low                         #lower bound
@@ -197,7 +198,6 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
         } # Condition met
         # Break loop
         # If the sample size reaches the maximum
-        print(c("low:", low, "n2:", n2, "n1:", n1, "h:", high)) # Eliminate
         previous_eta <- current_eta
         if (n2 == max) {
             break
@@ -211,18 +211,12 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
                        "data_H1" = results_H1,
                        "HYpotheses" = list(hypothesis1, hypothesis2),
                        "BF.threshold" = BF_thresh,
-                       "Evaluation" = type)
+                       "Constraint" = type)
     
     # Final output -----
     print_results(SSD_object)
     invisible(SSD_object)
 }
-
-
-#TODO:
-# - Check style with lintR
-# - Add plots.This could be a function.
-# - Run a simulation to know see the performance under various conditions.
 
 
 # Test -------------------------------------------------------------------------
@@ -232,11 +226,11 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
 # time.taken <- end.time - start.time
 # time.taken
 # 
-start.time <- Sys.time()
-a <- SSD_crt_inform(eff_size = 0.4, ndatasets = 100, rho = 0.05, BF_thresh = 3, eta = 0.7, fixed = "n1") #singularity
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken
+# start.time <- Sys.time()
+# a <- SSD_crt_inform(eff_size = 0.4, ndatasets = 100, rho = 0.05, BF_thresh = 3, eta = 0.7, fixed = "n1") #singularity
+# end.time <- Sys.time()
+# time.taken <- end.time - start.time
+# time.taken
 # 
 # start.time <- Sys.time()
 # SSD_crt_inform(eff.size = 0.4, n.datasets = 15, rho = 0.01, BF.thresh = 6, fixed = "n1")

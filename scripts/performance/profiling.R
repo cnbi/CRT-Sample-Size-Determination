@@ -5,10 +5,12 @@ library(dplyr)
 library(ggplot2)
 library(scales) # For scales in plots
 library(profvis)
+
+# Function for evaluation H0 vs H1
 source("SSD_clusters_function.R")
 
 # Design matrix
-rho <- c(0.05, 0.1) #Change
+rho <- c(0.05, 0.1)
 eff_size <- c(0.2)
 BF_threshold <- c(1, 3, 5)
 b_fract <- 3
