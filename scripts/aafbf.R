@@ -16,7 +16,6 @@ calc_aafbf <- function(type, estimates, sigma, b, n_eff) {
         comp2 <- .5
         
         # Fit
-        browser()
         fit2 <- pnorm(0, mean = estimates[1], sd = sqrt(sigma[[1]]))
         fit1 <- 1 - fit2
         

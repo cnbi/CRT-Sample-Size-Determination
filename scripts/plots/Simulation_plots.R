@@ -106,6 +106,13 @@ save(results_all, file = "NullPlotsResults.Rdata")
 # Plots --------------------------------
 ## Bayes factors --------------------
 #rho and bf.threshold=same
+# Null hypothesis
+final_results_FindN1_null <- readRDS("~/GitHub/CRT-Sample-Size-Determination/results/output/results_SimulationFindN1_null/final_results_FindN1.RDS")
+final_results_FindN2_null <- readRDS("~/GitHub/CRT-Sample-Size-Determination/results/output/results_SimulationFindN2/final_results_FindN2.RDS")
+
+# Informative hypotheses
+final_results_FindN1_inf <- readRDS("~/GitHub/CRT-Sample-Size-Determination/results/output/final_results_FindN1.RDS")
+final_results_FindN2_inf <- readRDS("~/GitHub/CRT-Sample-Size-Determination/results/output/final_results_FindN2.RDS")
 
 ggplot(results_all, aes(med.BF01, color = as.factor(n1), fill = as.factor(n1))) +
   geom_histogram(alpha = 0.5, bins = 100) +
@@ -255,3 +262,4 @@ qplot(x, y, data = dd, geom = "line") +
 x1 <- min(which(densities$x >= 3))
 x2 <- max(which(densities$x < 50))
 with(densities, polygon(x = c(x[c(x1, x1:x2, x2)]), y = c(0, y[x1:x2], 0), col = "gray"))
+

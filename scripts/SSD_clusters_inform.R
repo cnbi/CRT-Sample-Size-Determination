@@ -94,8 +94,8 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
         
         # Binary search algorithm ------------------------------------------
         if (condition_met == FALSE) {
-            print(c("Using cluster size:", n1, "and number of clusters:", n2,
-                    "prop_BF12: ", prop_BF12))
+            # print(c("Using cluster size:", n1, "and number of clusters:", n2,
+            #         "prop_BF12: ", prop_BF12))
             if (fixed == "n1") {
                 # Increase the number of clusters since eta is too small
                 low <- n2                         #lower bound
@@ -133,10 +133,10 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
                 }
             }
         } else if (condition_met == TRUE) {
-            print(c("Using cluster size:", n1,
-                    "and number of clusters:", n2,
-                    "prop_BF12: ", prop_BF12,
-                    "low: ", low, "high: ", high))
+            # print(c("Using cluster size:", n1,
+            #         "and number of clusters:", n2,
+            #         "prop_BF12: ", prop_BF12,
+            #         "low: ", low, "high: ", high))
             previous_high <- high
             if (fixed == "n1") {
                 # Eta is close enough to the desired eta
@@ -179,7 +179,7 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
                         high <- (n1*2) - low
                         if (n2 < 30) warning("The number of groups is less than 30.
                                                  This may cause problems in convergence and singularity.")
-                        print("Lowering with baby steps") # Eliminate late
+                        # print("Lowering with baby steps") # Eliminate late
                     }
                     
                 } else if (current_eta == previous_eta && n1 - low == 1) {
@@ -191,7 +191,7 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
                     low <- low                         #lower bound
                     high <- n1                         #higher bound
                     n1 <- round((low + high) / 2)      #point in the middle
-                    print("Lowering") # Eliminate later
+                    # print("Lowering") # Eliminate later
                 }
             }
             
