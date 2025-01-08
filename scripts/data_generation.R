@@ -18,7 +18,14 @@ gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u
                          var_e = var_e, mean_interv, batch_size) {
   # Create variables id  of the cluster and condition
   id <- rep(1:n2, each = n1)
-  condition <- rep(c(0, 1), each = n1 * n2 / 2)
+  if (n2 %% 2 == 0) {
+    condition <- rep(c(0, 1), each = n1 * n2 / 2)
+  } else {
+    # Odd number of clusters
+    half <- floor(n2 / 2)
+    condition <- c(rep(0, n1 * half), rep(1, n1 * half), rep(0, n1))
+    # the extra cluster goes to control condition
+  }
   # Dummy variables for no intercept model
   intervention <- condition
   control <- 1 - intervention
