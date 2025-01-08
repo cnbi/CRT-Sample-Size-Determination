@@ -6,7 +6,7 @@
 #'@arguments
 ## eff.size: Numeric. Effect size
 ## n1: Numeric. Cluster size
-## n2: Numeric. Number of clusters in each treatment condition.
+## n2: Numeric. Total number of clusters.
 ## n.datasets: Numeric. Number of data sets that the user wants to generate to determine the sample size.
 ## rho: Numeric. Intraclass correlation
 ## BF.thresh: Numeric. Value of the Bayes factor that is going to be the threshold.

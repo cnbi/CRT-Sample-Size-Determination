@@ -5,7 +5,7 @@
 #"@arguments
 ## ndatasets: Numeric. Number of data sets that the user wants to generate to determine the sample size
 ## n1: Numeric. Cluster size
-## n2: Numeric. Number of clusters per treatment condition
+## n2: Numeric. Total number of clusters.
 ## rho: Numeric. Intraclass correlation
 ## var_u0: Numeric. Between-cluster variance. Variance at the cluster level.
 ## var_e: Numeric. Within-cluster variance.
