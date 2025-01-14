@@ -6,7 +6,7 @@
 #'@arguments
 ## eff.size: Numeric. Effect size
 ## n1: Numeric. Cluster size
-## n2: Numeric. Number of clusters in each treatment condition.
+## n2: Numeric. Total number of clusters.
 ## n.datasets: Numeric. Number of data sets that the user wants to generate to determine the sample size.
 ## rho: Numeric. Intraclass correlation
 ## BF.thresh: Numeric. Value of the Bayes factor that is going to be the threshold.
@@ -25,7 +25,6 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
     if (is.numeric(c(eff_size, n1, n2, ndatasets, rho, BF_thresh, eta, max, batch_size)) == FALSE) 
         stop("All arguments, except 'fixed', must be numeric")
     if (eff_size < 0) stop("The effect size must be a positive value ")
-    if (n2 %% 2 > 0) stop("The number of clusters must be even")
     if (rho > 1) stop("The intraclass correlation must be standardized and cannot be larger than 1")
     if (rho < 0) stop("The intraclass correlation must be a positive value")
     if (eta > 1) stop("The probability of exceeding Bayes Factor threshold cannot be larger than 1")
