@@ -5,7 +5,7 @@
 #"@arguments
 ## ndatasets: Numeric. Number of data sets that the user wants to generate to determine the sample size
 ## n1: Numeric. Cluster size
-## n2: Numeric. Number of clusters per treatment condition
+## n2: Numeric. Total number of clusters.
 ## rho: Numeric. Intraclass correlation
 ## var_u0: Numeric. Between-cluster variance. Variance at the cluster level.
 ## var_e: Numeric. Within-cluster variance.
@@ -18,7 +18,14 @@ gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u
                          var_e = var_e, mean_interv, batch_size) {
   # Create variables id  of the cluster and condition
   id <- rep(1:n2, each = n1)
-  condition <- rep(c(0, 1), each = n1 * n2 / 2)
+  if (n2 %% 2 == 0) {
+    condition <- rep(c(0, 1), each = n1 * n2 / 2)
+  } else {
+    # Odd number of clusters
+    half <- floor(n2 / 2)
+    condition <- c(rep(0, n1 * half), rep(1, n1 * half), rep(0, n1))
+  }
+  
   # Dummy variables for no intercept model
   intervention <- condition
   control <- 1 - intervention
