@@ -30,3 +30,14 @@ extract_res <- function(x, number) {
     results <- x[[number]]
     return(results)
 }
+
+# Rounding half away from zero
+round2 <- function(number, decimals = 0) {
+    sign_number <- sign(number)
+    number <- abs(number) * 10^decimals
+    number <- number + 0.5 + sqrt(.Machine$double.eps)
+    number <- trunc(number)
+    number <- number / 10 ^ decimals
+    number * sign_number
+}
+# Source: https://stackoverflow.com/questions/66600344/commercial-rounding-in-r-i-e-always-round-up-from-5/66600470#66600470
