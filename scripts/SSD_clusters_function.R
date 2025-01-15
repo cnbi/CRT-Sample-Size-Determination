@@ -336,3 +336,6 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
 # Test
 # nulla <- SSD_crt_nullv2(eff_size = 0.5, ndatasets = 100, rho = 0.1, BF_thresh = 3, fixed = "n1",
 #                       b_fract = 3)
+# a <- SSD_crt_null(eff_size = 0.6, n1 = 15, n2 = 40, ndatasets = 15, rho = 0.05,
+#                   BF_thresh1 = 3, BF_thresh0 = 1, eta1 = 0.8, eta0 = 0.7, fixed = "n1",
+#                   b_fract = 2, max = 300, batch_size = 15)
