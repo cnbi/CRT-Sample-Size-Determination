@@ -10,6 +10,9 @@ ICC <- (var_u) / (var_e + var_u)
 delta_st <- 1.39 / sqrt(var_e + var_u) # standardised effect size
 n2 <- 4*((1 + (n1 - 1) * ICC) / n1) * ((qnorm(0.975) + qnorm(0.8)) / delta_st)^2
 
+# Number of clusters using power of 0.9
+n2 <- 4*((1 + (n1 - 1) * ICC) / n1) * ((qnorm(0.975) + qnorm(0.9)) / delta_st)^2
+
 # Equation from: 
 #   Moerbeek, M., & Teerenstra, S. (2016). Power analysis of trials with multilevel
 #       data. CRC Press. http://www.crcnetbase.com/isbn/9781498729901
