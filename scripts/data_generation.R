@@ -22,10 +22,10 @@ gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u
     condition <- rep(c(0, 1), each = n1 * n2 / 2)
   } else {
     # Odd number of clusters
+    # the extra cluster goes to control condition
     half <- floor(n2 / 2)
     condition <- c(rep(0, n1 * half), rep(1, n1 * half), rep(0, n1))
   }
-  
   # Dummy variables for no intercept model
   intervention <- condition
   control <- 1 - intervention
