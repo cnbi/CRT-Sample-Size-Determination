@@ -5,7 +5,7 @@ This is a research compendium containing all the scripts, manuscript, and illust
 The following graph displays the organization of the files and folders related to this research study:
 -	**docs**
       -	**manuscript** – manuscript source and biblatex with all the references
-      -     **conferences** – Slides and a poster of this research which were presented at conferences.
+      -	**conferences** – Slides and a poster of this research which were presented at conferences.
 -	**results**
       -	**figures** – Illustrations used in the manuscript.
       -	**simulation results** – Data sets with simulation results.
